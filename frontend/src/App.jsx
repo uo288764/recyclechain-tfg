@@ -1,35 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+//
+// Root component of the RecycleChain frontend.
+// Wraps the application in WalletProvider so all components
+// have access to wallet state via context (Meta Open Source, 2024).
 
-function App() {
-  const [count, setCount] = useState(0)
+import { WalletProvider } from "./hooks/WalletContext";
+import Navbar from "./components/Navbar";
+import Dashboard from "./components/Dashboard";
 
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    // WalletProvider makes wallet state available to all children
+    <WalletProvider>
+      <div className="min-h-screen bg-gray-950 text-white">
+        
+        {/* Top navigation with wallet connection controls */}
+        <Navbar />
 
-export default App
+        {/* Main content area */}
+        <main>
+          <Dashboard />
+        </main>
+
+      </div>
+    </WalletProvider>
+  );
+};
+
+export default App;
