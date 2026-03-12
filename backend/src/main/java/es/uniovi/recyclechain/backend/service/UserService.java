@@ -36,7 +36,7 @@ public class UserService {
     }
 
     public void addUser(User user) {
-        // Encrypt passoword
+        // Encrypt password
         if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty()) {
             user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         }

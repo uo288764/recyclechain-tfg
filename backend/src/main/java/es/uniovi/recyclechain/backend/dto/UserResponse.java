@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Setter
 public class UserResponse {
 
-    // Getters y Setters
     private Long id;
     private String email;
     private String name;
