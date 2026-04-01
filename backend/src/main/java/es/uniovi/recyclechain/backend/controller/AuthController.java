@@ -5,6 +5,7 @@ import es.uniovi.recyclechain.backend.model.Role;
 import es.uniovi.recyclechain.backend.model.User;
 import es.uniovi.recyclechain.backend.security.JwtUtil;
 import es.uniovi.recyclechain.backend.service.UserService;
+import es.uniovi.recyclechain.backend.service.WalletVerificationService;
 import es.uniovi.recyclechain.backend.validator.RegisterValidator;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class AuthController {
 
     @Autowired
     private RegisterValidator registerValidator;
+
+    @Autowired
+    private WalletVerificationService walletVerificationService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request, BindingResult result) {
@@ -89,9 +93,19 @@ public class AuthController {
 
     @PostMapping("/wallet-login")
     public ResponseEntity<?> walletLogin(@Valid @RequestBody WalletLoginRequest request) {
-        // TODO: implement the verification for the wallet signature
+        // Verify the MetaMask signature before authenticating
+        boolean isValid = walletVerificationService.verifySignature(
+                request.getWalletAddress(),
+                request.getMessage(),
+                request.getSignature()
+        );
+
+        if (!isValid) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid signature");
+        }
+
         User user = userService.getUserByWalletAddress(request.getWalletAddress());
-        
+
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wallet not registered");
         }
@@ -99,12 +113,12 @@ public class AuthController {
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
         AuthResponse response = new AuthResponse(
-            token,
-            user.getId(),
-            user.getEmail(),
-            user.getName(),
-            user.getRole().name(),
-            user.getWalletAddress()
+                token,
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getRole().name(),
+                user.getWalletAddress()
         );
 
         return ResponseEntity.ok(response);
