@@ -1,87 +1,117 @@
 // src/components/Navbar.jsx
-// Top navigation bar. Displays wallet connection status,
-// network indicator, and connect/disconnect controls.
+//
+// Top navigation bar. Shows wallet connection status and
+// authenticated user info. Logout clears the JWT session.
 
-import { Recycle, LogOut, TriangleAlert, Wifi, Wallet } from "lucide-react";
+import { Recycle, LogOut, TriangleAlert, Wifi, Wallet, User } from "lucide-react";
 import { useWalletContext } from "../hooks/WalletContext";
+import { useAuthContext } from "../hooks/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-// Shortens a wallet address for display: 0x1234...5678
 const shortenAddress = (address) =>
-  `${address.slice(0, 6)}...${address.slice(-4)}`;
+    `${address.slice(0, 6)}...${address.slice(-4)}`;
 
 const Navbar = () => {
-  const {
-    account,
-    connect,
-    disconnect,
-    loading,
-    error,
-    isCorrectNetwork,
-    switchToAmoy,
-  } = useWalletContext();
+    const {
+        account,
+        connect,
+        disconnect: disconnectWallet,
+        loading,
+        error,
+        isCorrectNetwork,
+        switchToAmoy,
+    } = useWalletContext();
 
-  return (
-    <nav className="bg-gray-900 border-b border-green-800 px-6 py-4 flex items-center justify-between">
+    const { user, isAuthenticated, logout } = useAuthContext();
+    const navigate = useNavigate();
 
-      {/* App title */}
-      <div className="flex items-center gap-2">
-        <span className="text-2xl">♻</span>
-        <span className="text-green-400 font-bold text-xl tracking-tight">
-          RecycleChain
-        </span>
-      </div>
+    const handleLogout = () => {
+        logout();
+        disconnectWallet();
+        navigate("/login");
+    };
 
-      <div className="flex items-center gap-3">
+    return (
+        <nav className="bg-gray-900 border-b border-green-800 px-6 py-4 flex items-center justify-between">
 
-        {/* Show error if MetaMask not found */}
-        {error && (
-          <span className="text-red-400 text-sm">{error}</span>
-        )}
+            {/* App title */}
+            <div className="flex items-center gap-2">
+                <span className="text-2xl">♻</span>
+                <span className="text-green-400 font-bold text-xl tracking-tight">
+                    RecycleChain
+                </span>
+            </div>
 
-        {account ? (
-          <>
-            {/* Wrong network warning */}
-            {!isCorrectNetwork && (
-              <button
-                onClick={switchToAmoy}
-                className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-semibold px-3 py-1.5 rounded-lg"
-              >
-                <TriangleAlert size={16} /> Switch to Amoy
-              </button>
-            )}
+            <div className="flex items-center gap-3">
 
-            {/* Network badge — only shown when on correct network */}
-            {isCorrectNetwork && (
-              <span className="flex items-center gap-1 bg-green-900 text-green-400 text-xs font-mono px-2 py-1 rounded">
-                <Wifi size={12} /> Polygon Amoy
-              </span>
-            )}
+                {error && (
+                    <span className="text-red-400 text-sm">{error}</span>
+                )}
 
-            {/* Wallet address + disconnect */}
-            <span className="text-gray-300 text-sm font-mono bg-gray-800 px-3 py-1.5 rounded-lg">
-              {shortenAddress(account)}
-            </span>
-            <button
-              onClick={disconnect}
-              className="flex items-center gap-1 text-gray-400 hover:text-red-400 text-sm transition-colors"
-            >
-              <LogOut size={16} /> Disconnect
-            </button>
-          </>
-        ) : (
-          // Connect button — shown when no wallet is connected
-          <button
-            onClick={connect}
-            disabled={loading}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
-            <Wallet size={16} />
-            {loading ? "Connecting..." : "Connect Wallet"}
-          </button>
-        )}
-      </div>
-    </nav>
-  );
+                {/* Wallet controls — only shown when authenticated */}
+                {isAuthenticated && account && (
+                    <>
+                        {!isCorrectNetwork && (
+                            <button
+                                onClick={switchToAmoy}
+                                className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-semibold px-3 py-1.5 rounded-lg"
+                            >
+                                <TriangleAlert size={16} /> Switch to Amoy
+                            </button>
+                        )}
+
+                        {isCorrectNetwork && (
+                            <span className="flex items-center gap-1 bg-green-900 text-green-400 text-xs font-mono px-2 py-1 rounded">
+                                <Wifi size={12} /> Polygon Amoy
+                            </span>
+                        )}
+
+                        <span className="text-gray-300 text-sm font-mono bg-gray-800 px-3 py-1.5 rounded-lg">
+                            {shortenAddress(account)}
+                        </span>
+                    </>
+                )}
+
+                {/* Connect wallet button — shown when authenticated but no wallet */}
+                {isAuthenticated && !account && (
+                    <button
+                        onClick={connect}
+                        disabled={loading}
+                        className="flex items-center gap-2 border border-green-700 hover:border-green-500 text-green-400 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                        <Wallet size={16} />
+                        {loading ? "Connecting..." : "Connect Wallet"}
+                    </button>
+                )}
+
+                {/* Authenticated user info + logout */}
+                {isAuthenticated && (
+                    <div className="flex items-center gap-3 border-l border-gray-700 pl-3">
+                        <span className="flex items-center gap-1 text-gray-300 text-sm">
+                            <User size={14} />
+                            {user?.name}
+                        </span>
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-1 text-gray-400 hover:text-red-400 text-sm transition-colors"
+                        >
+                            <LogOut size={16} /> Logout
+                        </button>
+                    </div>
+                )}
+
+                {/* Not authenticated — show connect/login prompt */}
+                {!isAuthenticated && (
+                    <button
+                        onClick={() => navigate("/login")}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+                    >
+                        Sign In
+                    </button>
+                )}
+            </div>
+        </nav>
+    );
 };
 
 export default Navbar;

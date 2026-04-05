@@ -1,192 +1,218 @@
 // src/components/Dashboard.jsx
 //
-// Main user dashboard. Reads recycling statistics directly from
-// the RecyclingRewards smart contract using ethers.js view calls.
-//
-// Note: In a dApp, there is no backend — data is read
-// directly from the blockchain state (Antonopoulos & Wood, 2018).
-// View functions do not require gas as they do not modify state
-// (Ethereum Foundation, 2024).
+// Main user dashboard. Combines on-chain data (token balance via ethers.js)
+// with off-chain data (stats, history, tiers) from the Spring Boot backend.
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useWalletContext } from "../hooks/WalletContext";
+import { useAuthContext } from "../hooks/AuthContext";
 import { getContract } from "../utils/contract";
-import { Scale, Coins, Wallet, Calendar } from "lucide-react";
+import { recyclingService } from "../services/recyclingService";
+import { Scale, Coins, Wallet, Calendar, Trophy, Zap } from "lucide-react";
 
 const Dashboard = () => {
-    const { 
-        account, 
-        provider, 
-        isCorrectNetwork
-    } = useWalletContext();
-    // State for the user's on-chain recycling statistics
-    const [stats, setStats] = useState({
+    const { account, provider, isCorrectNetwork } = useWalletContext();
+    const { user } = useAuthContext();
+
+    // On-chain data from the smart contract
+    const [chainStats, setChainStats] = useState({
+        balance: 0,
         totalKg: 0,
         totalRewards: 0,
         lastTime: null,
-        balance: 0,
     });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    // Off-chain data from the backend
+    const [backendStats, setBackendStats] = useState(null);
+    const [history, setHistory] = useState([]);
 
-  // Fetch user stats from the smart contract.
-  // Called on mount and whenever the connected account changes.
-  // Uses a read-only provider since we are only querying state,
-  // not sending a transaction (Ricmoo, 2024).
-  const fetchStats = async () => {
-    if (!account || !provider || !isCorrectNetwork) return;
+    const [loadingChain, setLoadingChain] = useState(false);
+    const [loadingBackend, setLoadingBackend] = useState(false);
+    const [error, setError] = useState(null);
 
-    try {
-      setLoading(true);
-      setError(null);
+    // Fetch on-chain stats from the smart contract
+    const fetchChainStats = async () => {
+        if (!account || !provider || !isCorrectNetwork) { return; }
 
-      // Instantiate the contract with a provider (read-only)
-      const contract = getContract(provider);
+        try {
+            setLoadingChain(true);
+            const contract = getContract(provider);
+            const result = await contract.getUserStats(account);
 
-      // getUserStats returns a tuple: [totalKg, totalRewards, lastTime, balance]
-      const result = await contract.getUserStats(account);
+            setChainStats({
+                totalKg: Number(result[0]),
+                totalRewards: parseFloat(ethers.formatUnits(result[1], 18)).toFixed(2),
+                lastTime: Number(result[2]) > 0
+                    ? new Date(Number(result[2]) * 1000).toLocaleDateString()
+                    : "Never",
+                balance: parseFloat(ethers.formatUnits(result[3], 18)).toFixed(2),
+            });
+        } catch (err) {
+            setError("Error reading from contract: " + err.message);
+        } finally {
+            setLoadingChain(false);
+        }
+    };
 
-      setStats({
-        // Convert from BigInt to readable number
-        totalKg: Number(result[0]),
+    // Fetch stats and history from the backend
+    const fetchBackendData = async () => {
+        try {
+            setLoadingBackend(true);
+            const [stats, historyData] = await Promise.all([
+                recyclingService.getStats(),
+                recyclingService.getHistory(),
+            ]);
+            setBackendStats(stats);
+            setHistory(historyData);
+        } catch (err) {
+            setError("Error fetching backend data: " + err.message);
+        } finally {
+            setLoadingBackend(false);
+        }
+    };
 
-        // Convert from wei (18 decimals) to RCT tokens using formatUnits
-        // e.g. 50000000000000000000 → "50.0" (Ricmoo, 2024)
-        totalRewards: parseFloat(ethers.formatUnits(result[1], 18)).toFixed(2),
+    const handleRefresh = () => {
+        fetchChainStats();
+        fetchBackendData();
+    };
 
-        // Convert Unix timestamp to readable date
-        // Returns 0 if user has never recycled
-        lastTime: Number(result[2]) > 0
-          ? new Date(Number(result[2]) * 1000).toLocaleDateString()
-          : "Never",
+    useEffect(() => {
+        fetchBackendData();
+    }, []);
 
-        // Current RCT token balance
-        balance: parseFloat(ethers.formatUnits(result[3], 18)).toFixed(2),
-      });
-    } catch (err) {
-      setError("Error fetching stats from contract: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        fetchChainStats();
+    }, [account, isCorrectNetwork]);
 
-  // Re-fetch whenever the connected account changes (useEffect dependency array)
-  // This ensures the dashboard always shows data for the current wallet
-  // (Meta Open Source, 2024)
-  useEffect(() => {
-    fetchStats();
-  }, [account, isCorrectNetwork]);
+    const loading = loadingChain || loadingBackend;
 
-  // Guard: prompt user to connect wallet
-  if (!account) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <span className="text-6xl mb-4">♻</span>
-        <h2 className="text-2xl font-bold text-green-400 mb-2">
-          Welcome to RecycleChain
-        </h2>
-        <p className="text-gray-400 max-w-md">
-          Connect your MetaMask wallet to view your recycling stats
-          and token rewards.
-        </p>
-      </div>
+        <div className="max-w-4xl mx-auto px-6 py-10">
+
+            <h1 className="text-3xl font-bold text-green-400 mb-1">
+                Welcome back, {user?.name}
+            </h1>
+            {account && (
+                <p className="text-gray-500 text-sm font-mono mb-8">{account}</p>
+            )}
+
+            {loading && (
+                <p className="text-gray-400 text-sm mb-4">Loading data...</p>
+            )}
+            {error && (
+                <p className="text-red-400 text-sm mb-4">{error}</p>
+            )}
+
+            {/* Main stats grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <StatCard
+                    icon={<Scale size={28} />}
+                    label="Total Recycled"
+                    value={`${backendStats?.totalKg ?? chainStats.totalKg} kg`}
+                    color="green"
+                />
+                <StatCard
+                    icon={<Coins size={28} />}
+                    label="RCT Earned"
+                    value={`${backendStats?.totalTokensEarned ?? chainStats.totalRewards} RCT`}
+                    color="yellow"
+                />
+                <StatCard
+                    icon={<Wallet size={28} />}
+                    label="Wallet Balance"
+                    value={account ? `${chainStats.balance} RCT` : "—"}
+                    color="blue"
+                />
+                <StatCard
+                    icon={<Calendar size={28} />}
+                    label="Total Events"
+                    value={backendStats?.totalEvents ?? "—"}
+                    color="purple"
+                />
+                <StatCard
+                    icon={<Zap size={28} />}
+                    label="Event Bonus"
+                    value={backendStats ? `x${backendStats.eventMultiplier}` : "—"}
+                    color="yellow"
+                />
+                <StatCard
+                    icon={<Trophy size={28} />}
+                    label="Event Tier"
+                    value={backendStats?.eventTier ?? "—"}
+                    color="green"
+                />
+            </div>
+
+            {/* Recycling history table */}
+            {history.length > 0 && (
+                <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-gray-300 mb-3">
+                        Recycling History
+                    </h2>
+                    <div className="overflow-x-auto rounded-xl border border-gray-800">
+                        <table className="w-full text-sm text-gray-300">
+                            <thead className="bg-gray-800 text-gray-400 uppercase text-xs">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">Station</th>
+                                    <th className="px-4 py-3 text-left">Material</th>
+                                    <th className="px-4 py-3 text-left">Weight</th>
+                                    <th className="px-4 py-3 text-left">Tokens</th>
+                                    <th className="px-4 py-3 text-left">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.map((event, index) => (
+                                    <tr
+                                        key={event.id}
+                                        className={index % 2 === 0 ? "bg-gray-900" : "bg-gray-950"}
+                                    >
+                                        <td className="px-4 py-3">{event.stationName}</td>
+                                        <td className="px-4 py-3 capitalize">{event.materialType}</td>
+                                        <td className="px-4 py-3">{event.weight} kg</td>
+                                        <td className="px-4 py-3 text-yellow-400">{event.tokensEarned} RCT</td>
+                                        <td className="px-4 py-3 text-gray-500">
+                                            {new Date(event.createdAt).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {history.length === 0 && !loading && (
+                <div className="text-center py-12 border border-dashed border-gray-800 rounded-xl text-gray-600">
+                    No recycling events yet. Visit a station to get started!
+                </div>
+            )}
+
+            <button
+                onClick={handleRefresh}
+                className="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            >
+                ↻ Refresh
+            </button>
+        </div>
     );
-  }
-
-  // Guard: prompt user to switch network
-  if (!isCorrectNetwork) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <span className="text-5xl mb-4">⚠</span>
-        <h2 className="text-xl font-bold text-yellow-400 mb-2">
-          Wrong Network
-        </h2>
-        <p className="text-gray-400">
-          Please switch to Polygon Amoy using the button in the navbar.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
-
-      {/* Page title */}
-      <h1 className="text-3xl font-bold text-green-400 mb-2">
-        Your Recycling Dashboard
-      </h1>
-      <p className="text-gray-400 text-sm mb-8 font-mono">
-        {account}
-      </p>
-
-      {loading && (
-        <p className="text-gray-400 text-sm mb-4">Loading on-chain data...</p>
-      )}
-
-      {error && (
-        <p className="text-red-400 text-sm mb-4">{error}</p>
-      )}
-
-      {/* Stats grid — 4 cards showing key metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <StatCard
-          icon={<Scale size={28} />}
-          label="Total Recycled"
-          value={`${stats.totalKg} kg`}
-          color="green"
-        />
-        <StatCard
-          icon={<Coins size={28} />}
-          label="RCT Earned"
-          value={`${stats.totalRewards} RCT`}
-          color="yellow"
-        />
-        <StatCard
-          icon={<Wallet size={28} />}
-          label="Current Balance"
-          value={`${stats.balance} RCT`}
-          color="blue"
-        />
-        <StatCard
-          icon={<Calendar size={28} />}
-          label="Last Recycling"
-          value={stats.lastTime}
-          color="purple"
-        />
-      </div>
-
-      {/* Refresh button */}
-      <button
-        onClick={fetchStats}
-        className="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-      >
-        ↻ Refresh Stats
-      </button>
-    </div>
-  );
 };
 
-// Reusable stat card component
-// Accepts icon, label, value and a colour variant
 const StatCard = ({ icon, label, value, color }) => {
-  const colors = {
-    green:  "border-green-700 bg-green-900/20 text-green-400",
-    yellow: "border-yellow-700 bg-yellow-900/20 text-yellow-400",
-    blue:   "border-blue-700 bg-blue-900/20 text-blue-400",
-    purple: "border-purple-700 bg-purple-900/20 text-purple-400",
-  };
+    const colors = {
+        green:  "border-green-700 bg-green-900/20 text-green-400",
+        yellow: "border-yellow-700 bg-yellow-900/20 text-yellow-400",
+        blue:   "border-blue-700 bg-blue-900/20 text-blue-400",
+        purple: "border-purple-700 bg-purple-900/20 text-purple-400",
+    };
 
-  return (
-    <div className={`border rounded-xl p-5 ${colors[color]}`}>
-      <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">
-        {label}
-      </div>
-      <div className="text-xl font-bold">{value}</div>
-    </div>
-  );
+    return (
+        <div className={`border rounded-xl p-5 ${colors[color]}`}>
+            <div className="text-3xl mb-2">{icon}</div>
+            <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">{label}</div>
+            <div className="text-xl font-bold">{value}</div>
+        </div>
+    );
 };
 
 export default Dashboard;
