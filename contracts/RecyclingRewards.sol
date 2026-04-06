@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -6,12 +5,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title RecyclingRewards
- * @notice TFG — Sistema de reciclaje con recompensas en blockchain
- * @dev Sprint 1: token ERC20 + registro de reciclaje por estaciones
+ * @notice TFG — Blockchain-based recycling rewards system
+ * @dev Sprint 1: ERC20 token + recycling registration by stations
  */
 contract RecyclingRewards is ERC20, Ownable {
 
-    // 10 tokens por kg reciclado
+    // 10 tokens per recycled kg 
     uint256 public constant REWARD_PER_KG = 10 * 10**18;
 
     struct RecyclingRecord {
