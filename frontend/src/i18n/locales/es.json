@@ -5,8 +5,11 @@
     "logout": "Cerrar sesión",
     "connectWallet": "Conectar cartera",
     "connecting": "Conectando...",
-    "switchToAmoy": "Cambiar a Amoy"
+    "switchToAmoy": "Cambiar a Amoy",
+    "dashboard": "Panel",
+    "stations": "Estaciones"
   },
+  
   "login": {
     "title": "Iniciar sesión en RecycleChain",
     "connectWalletLogin": "Conectar cartera e iniciar sesión",

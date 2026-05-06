@@ -5,7 +5,9 @@
     "logout": "Logout",
     "connectWallet": "Connect Wallet",
     "connecting": "Connecting...",
-    "switchToAmoy": "Switch to Amoy"
+    "switchToAmoy": "Switch to Amoy",
+    "dashboard": "Dashboard",
+    "stations": "Stations"
   },
   "login": {
     "title": "Sign in to RecycleChain",
