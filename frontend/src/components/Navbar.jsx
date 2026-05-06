@@ -1,12 +1,13 @@
 // src/components/Navbar.jsx
 //
-// Top navigation bar. Shows wallet connection status and
-// authenticated user info. Logout clears the JWT session.
+// Top navigation bar. Shows wallet connection status,
+// authenticated user info, language selector and logout.
 
-import { Recycle, LogOut, TriangleAlert, Wifi, Wallet, User } from "lucide-react";
+import { LogOut, TriangleAlert, Wifi, Wallet, User } from "lucide-react";
 import { useWalletContext } from "../hooks/WalletContext";
 import { useAuthContext } from "../hooks/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const shortenAddress = (address) =>
     `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -25,11 +26,17 @@ const Navbar = () => {
     const { user, isAuthenticated, logout } = useAuthContext();
     const navigate = useNavigate();
     const location = useLocation();
+    const { t, i18n } = useTranslation();
 
     const handleLogout = () => {
         logout();
         disconnectWallet();
         navigate("/login");
+    };
+
+    const toggleLanguage = () => {
+        const next = i18n.language.startsWith("es") ? "en" : "es";
+        i18n.changeLanguage(next);
     };
 
     return (
@@ -57,7 +64,7 @@ const Navbar = () => {
                                 onClick={switchToAmoy}
                                 className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-semibold px-3 py-1.5 rounded-lg"
                             >
-                                <TriangleAlert size={16} /> Switch to Amoy
+                                <TriangleAlert size={16} /> {t("navbar.switchToAmoy")}
                             </button>
                         )}
 
@@ -81,7 +88,7 @@ const Navbar = () => {
                         className="flex items-center gap-2 border border-green-700 hover:border-green-500 text-green-400 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
                     >
                         <Wallet size={16} />
-                        {loading ? "Connecting..." : "Connect Wallet"}
+                        {loading ? t("navbar.connecting") : t("navbar.connectWallet")}
                     </button>
                 )}
 
@@ -96,7 +103,7 @@ const Navbar = () => {
                             onClick={handleLogout}
                             className="flex items-center gap-1 text-gray-400 hover:text-red-400 text-sm transition-colors"
                         >
-                            <LogOut size={16} /> Logout
+                            <LogOut size={16} /> {t("navbar.logout")}
                         </button>
                     </div>
                 )}
@@ -109,18 +116,28 @@ const Navbar = () => {
                                 onClick={() => navigate("/register")}
                                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
                             >
-                                Register
+                                {t("navbar.register")}
                             </button>
                         ) : (
                             <button
                                 onClick={() => navigate("/login")}
                                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
                             >
-                                Sign In
+                                {t("navbar.signIn")}
                             </button>
                         )}
                     </>
                 )}
+
+                {/* Language toggle — shows flag of the language to switch to */}
+                <button
+                    onClick={toggleLanguage}
+                    className="text-lg hover:opacity-75 transition-opacity"
+                    title={i18n.language.startsWith("es") ? "Switch to English" : "Cambiar a español"}
+                >
+                    {i18n.language.startsWith("es") ? "🇬🇧" : "🇪🇸"}
+                </button>
+
             </div>
         </nav>
     );

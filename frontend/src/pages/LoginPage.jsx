@@ -9,11 +9,13 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuthContext } from "../hooks/AuthContext";
 import { useWalletContext } from "../hooks/WalletContext";
 import { Wallet, LogIn } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const LoginPage = () => {
     const { login, walletLogin, loading, error } = useAuthContext();
     const { account, connect } = useWalletContext();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -26,21 +28,20 @@ const LoginPage = () => {
             await login(email, password);
             navigate("/");
         } catch {
-            setFormError("Invalid email or password");
+            setFormError(t("login.errorInvalidCredentials"));
         }
     };
 
     const handleWalletLogin = async () => {
         setFormError(null);
         try {
-            // Connect wallet first if not connected
             if (!account) {
                 await connect();
             }
             await walletLogin(account);
             navigate("/");
         } catch {
-            setFormError("Wallet not registered. Please sign up first.");
+            setFormError(t("login.errorWalletNotRegistered"));
         }
     };
 
@@ -51,18 +52,17 @@ const LoginPage = () => {
                 <div className="text-center mb-8">
                     <span className="text-5xl">♻</span>
                     <h1 className="text-2xl font-bold text-green-400 mt-2">
-                        Sign in to RecycleChain
+                        {t("login.title")}
                     </h1>
                 </div>
 
-                {/* Wallet login */}
                 <button
                     onClick={handleWalletLogin}
                     disabled={loading}
                     className="w-full flex items-center justify-center gap-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors mb-6"
                 >
                     <Wallet size={18} />
-                    {account ? "Login with Connected Wallet" : "Connect Wallet & Login"}
+                    {account ? t("login.loginWithWallet") : t("login.connectWalletLogin")}
                 </button>
 
                 <div className="flex items-center gap-3 mb-6">
@@ -71,10 +71,9 @@ const LoginPage = () => {
                     <div className="flex-1 h-px bg-gray-700" />
                 </div>
 
-                {/* Email + password form */}
                 <form onSubmit={handleLogin} className="flex flex-col gap-4">
                     <div>
-                        <label className="block text-sm text-gray-400 mb-1">Email</label>
+                        <label className="block text-sm text-gray-400 mb-1">{t("login.email")}</label>
                         <input
                             type="email"
                             value={email}
@@ -85,7 +84,7 @@ const LoginPage = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm text-gray-400 mb-1">Password</label>
+                        <label className="block text-sm text-gray-400 mb-1">{t("login.password")}</label>
                         <input
                             type="password"
                             value={password}
@@ -106,14 +105,14 @@ const LoginPage = () => {
                         className="flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors"
                     >
                         <LogIn size={18} />
-                        {loading ? "Signing in..." : "Sign In"}
+                        {loading ? t("login.signingIn") : t("login.signIn")}
                     </button>
                 </form>
 
                 <p className="text-center text-gray-500 text-sm mt-6">
-                    No account?{" "}
+                    {t("login.noAccount")}{" "}
                     <Link to="/register" className="text-green-400 hover:underline">
-                        Register here
+                        {t("login.registerHere")}
                     </Link>
                 </p>
             </div>
