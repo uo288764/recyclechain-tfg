@@ -1,7 +1,7 @@
 // src/pages/StationsPage.jsx
 //
 // Displays all active recycling stations fetched from the backend.
-// Shows station name, address and coordinates.
+// Shows station name, address and a link to Google Maps coordinates.
 
 import { useState, useEffect } from "react";
 import { MapPin, Loader } from "lucide-react";
@@ -46,7 +46,6 @@ const StationsPage = () => {
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-10">
-
             <h1 className="text-3xl font-bold text-green-400 mb-2">
                 Recycling Stations
             </h1>
@@ -80,8 +79,9 @@ const StationCard = ({ station }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-green-500 hover:text-green-400 text-xs font-mono transition-colors"
-                    
+                    <a>
                         {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)} →
+                    </a>
                 </div>
             </div>
         </div>

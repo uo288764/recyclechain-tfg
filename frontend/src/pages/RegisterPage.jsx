@@ -42,8 +42,14 @@ const RegisterPage = () => {
         try {
             await register(form.email, form.password, form.name, account || null);
             navigate("/");
-        } catch {
-            setFormError("Registration failed. Email may already be in use.");
+        } catch (err) {
+            // Extract the first defaultMessage from Spring's BindingResult error array
+            const backendErrors = err.response?.data;
+            if (Array.isArray(backendErrors) && backendErrors.length > 0 && backendErrors[0].defaultMessage) {
+                setFormError(backendErrors[0].defaultMessage);
+            } else {
+                setFormError("Registration failed. Please try again.");
+            }
         }
     };
 

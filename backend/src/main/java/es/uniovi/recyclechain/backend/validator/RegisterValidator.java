@@ -22,21 +22,33 @@ public class RegisterValidator implements Validator {
     public void validate(Object target, Errors errors) {
         RegisterRequest registerRequest = (RegisterRequest) target;
 
-        // Validate that passwords are the same
+        // Validate that passwords match
         if (!registerRequest.getPassword().equals(registerRequest.getPasswordConfirm())) {
-            errors.rejectValue("passwordConfirm", "Error.register.passwordConfirm.mismatch");
+            errors.rejectValue(
+                "passwordConfirm",
+                "Error.register.passwordConfirm.mismatch",
+                "Passwords do not match"
+            );
         }
 
-        // Validate that the email is not reghistered
+        // Validate that the email is not already registered
         if (userService.existsByEmail(registerRequest.getEmail())) {
-            errors.rejectValue("email", "Error.register.email.duplicate");
+            errors.rejectValue(
+                "email",
+                "Error.register.email.duplicate",
+                "Email is already registered"
+            );
         }
 
-        // Validar that the wallet is not registered (if provided)
-        if (registerRequest.getWalletAddress() != null && 
+        // Validate that the wallet address is not already registered (if provided)
+        if (registerRequest.getWalletAddress() != null &&
             !registerRequest.getWalletAddress().isEmpty()) {
             if (userService.existsByWalletAddress(registerRequest.getWalletAddress())) {
-                errors.rejectValue("walletAddress", "Error.register.walletAddress.duplicate");
+                errors.rejectValue(
+                    "walletAddress",
+                    "Error.register.walletAddress.duplicate",
+                    "Wallet address is already registered"
+                );
             }
         }
     }
