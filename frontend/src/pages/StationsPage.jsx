@@ -74,12 +74,7 @@ const StationCard = ({ station }) => {
                 <div className="flex-1">
                     <h3 className="text-white font-semibold mb-1">{station.name}</h3>
                     <p className="text-gray-400 text-sm mb-3">{station.address}</p>
-                    
-                        href={mapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-500 hover:text-green-400 text-xs font-mono transition-colors"
-                    <a>
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 text-xs font-mono transition-colors">
                         {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)} →
                     </a>
                 </div>

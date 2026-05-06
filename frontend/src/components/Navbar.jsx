@@ -6,7 +6,7 @@
 import { Recycle, LogOut, TriangleAlert, Wifi, Wallet, User } from "lucide-react";
 import { useWalletContext } from "../hooks/WalletContext";
 import { useAuthContext } from "../hooks/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const shortenAddress = (address) =>
     `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -24,6 +24,7 @@ const Navbar = () => {
 
     const { user, isAuthenticated, logout } = useAuthContext();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         logout();
@@ -100,14 +101,25 @@ const Navbar = () => {
                     </div>
                 )}
 
-                {/* Not authenticated — show connect/login prompt */}
+                {/* Not authenticated — show Sign In or Register depending on current page */}
                 {!isAuthenticated && (
-                    <button
-                        onClick={() => navigate("/login")}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
-                    >
-                        Sign In
-                    </button>
+                    <>
+                        {location.pathname === "/login" ? (
+                            <button
+                                onClick={() => navigate("/register")}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+                            >
+                                Register
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => navigate("/login")}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+                            >
+                                Sign In
+                            </button>
+                        )}
+                    </>
                 )}
             </div>
         </nav>
