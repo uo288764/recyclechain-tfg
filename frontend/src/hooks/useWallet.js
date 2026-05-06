@@ -2,114 +2,104 @@
 // Custom hook that manages MetaMask wallet interactions.
 // Provides: account address, provider, signer, network info,
 // connect/disconnect functions, and automatic network switching.
+//
+// Uses ethers.js FallbackProvider with multiple RPC endpoints so that
+// if one node is saturated or unavailable, the next one is tried automatically.
+// All network constants are read from src/config/network.js.
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { AMOY_CHAIN_ID, AMOY_RPC_URLS, BLOCK_EXPLORER_URL } from "../config/network";
+
+// Builds an ethers.js FallbackProvider from the RPC list.
+// Each provider is given a decreasing priority so the first URL is preferred.
+const buildFallbackProvider = () => {
+    const providers = AMOY_RPC_URLS.map((url, index) => ({
+        provider: new ethers.JsonRpcProvider(url),
+        priority: AMOY_RPC_URLS.length - index,
+        stallTimeout: 2000,
+    }));
+    return new ethers.FallbackProvider(providers, 1);
+};
 
 export const useWallet = () => {
-  const [account, setAccount] = useState(null);      // Connected wallet address
-  const [provider, setProvider] = useState(null);    // ethers.js BrowserProvider
-  const [signer, setSigner] = useState(null);        // Signer for sending transactions
-  const [chainId, setChainId] = useState(null);      // Current network chain ID
-  const [loading, setLoading] = useState(false);     // Loading state during connection
-  const [error, setError] = useState(null);          // Error messages
+    const [account, setAccount] = useState(null);
+    const [provider, setProvider] = useState(null);
+    const [signer, setSigner] = useState(null);
+    const [chainId, setChainId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  // Polygon Amoy testnet chain ID in hexadecimal (80002 decimal)
-  const AMOY_CHAIN_ID = "0x13882";
+    const connect = async () => {
+        if (!window.ethereum) {
+            setError("MetaMask not found. Please install it.");
+            return;
+        }
+        try {
+            setLoading(true);
+            setError(null);
 
-  // Requests wallet access and initialises the provider and signer
-  const connect = async () => {
-    // Check if MetaMask is installed
-    if (!window.ethereum) {
-      setError("MetaMask not found. Please install it.");
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
+            const browserProvider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await browserProvider.send("eth_requestAccounts", []);
+            const _signer = await browserProvider.getSigner();
+            const network = await browserProvider.getNetwork();
+            const fallbackProvider = buildFallbackProvider();
 
-      // BrowserProvider wraps window.ethereum into an ethers.js provider
-      const _provider = new ethers.BrowserProvider(window.ethereum);
+            setProvider(fallbackProvider);
+            setSigner(_signer);
+            setAccount(accounts[0]);
+            setChainId("0x" + network.chainId.toString(16));
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      // Triggers the MetaMask popup asking the user to connect
-      const accounts = await _provider.send("eth_requestAccounts", []);
+    const disconnect = () => {
+        setAccount(null);
+        setProvider(null);
+        setSigner(null);
+        setChainId(null);
+    };
 
-      // Signer is needed to sign and send transactions
-      const _signer = await _provider.getSigner();
+    const switchToAmoy = async () => {
+        try {
+            await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: AMOY_CHAIN_ID }],
+            });
+        } catch (err) {
+            await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                    chainId: AMOY_CHAIN_ID,
+                    chainName: "Polygon Amoy",
+                    nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
+                    rpcUrls: AMOY_RPC_URLS,
+                    blockExplorerUrls: [BLOCK_EXPLORER_URL],
+                }],
+            });
+        }
+    };
 
-      // Detect which network the user is currently on
-      const network = await _provider.getNetwork();
+    const isCorrectNetwork = chainId === AMOY_CHAIN_ID;
 
-      setProvider(_provider);
-      setSigner(_signer);
-      setAccount(accounts[0]);
-      setChainId("0x" + network.chainId.toString(16));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        if (!window.ethereum) { return; }
 
-  // Clears all wallet state (does not disconnect MetaMask itself)
-  const disconnect = () => {
-    setAccount(null);
-    setProvider(null);
-    setSigner(null);
-    setChainId(null);
-  };
+        window.ethereum.on("accountsChanged", (accounts) => {
+            if (accounts.length === 0) {
+                disconnect();
+            } else {
+                setAccount(accounts[0]);
+            }
+        });
 
-  // Asks MetaMask to switch to Polygon Amoy.
-  // If the network is not yet added to MetaMask, it adds it automatically.
-  const switchToAmoy = async () => {
-    try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: AMOY_CHAIN_ID }],
-      });
-    } catch (err) {
-      // Error code 4902 means the chain is not added to MetaMask yet
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [{
-          chainId: AMOY_CHAIN_ID,
-          chainName: "Polygon Amoy",
-          nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
-          rpcUrls: ["https://rpc-amoy.polygon.technology"],
-          blockExplorerUrls: ["https://amoy.polygonscan.com"],
-        }],
-      });
-    }
-  };
+        window.ethereum.on("chainChanged", (newChainId) => {
+            setChainId(newChainId);
+        });
+    }, []);
 
-  // True only when the user is connected to Polygon Amoy
-  const isCorrectNetwork = chainId === AMOY_CHAIN_ID;
-
-  // Listen for MetaMask events so the UI stays in sync
-  // if the user changes account or network outside the app
-  useEffect(() => {
-    if (!window.ethereum) return;
-
-    window.ethereum.on("accountsChanged", (accounts) => {
-      if (accounts.length === 0) disconnect(); // User disconnected in MetaMask
-      else setAccount(accounts[0]);            // User switched account
-    });
-
-    window.ethereum.on("chainChanged", (chainId) => {
-      setChainId(chainId); // Update network state on chain change
-    });
-  }, []);
-
-  return {
-    account,
-    provider,
-    signer,
-    chainId,
-    loading,
-    error,
-    connect,
-    disconnect,
-    switchToAmoy,
-    isCorrectNetwork,
-  };
+    return { account, provider, signer, chainId, loading, error, connect, disconnect, switchToAmoy, isCorrectNetwork };
 };

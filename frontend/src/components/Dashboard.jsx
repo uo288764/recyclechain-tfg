@@ -78,9 +78,11 @@ const Dashboard = () => {
         fetchBackendData();
     }, []);
 
+    // provider is included so the effect re-runs when it becomes available,
+    // preventing a race condition where account is set before provider is ready.
     useEffect(() => {
         fetchChainStats();
-    }, [account, isCorrectNetwork]);
+    }, [account, provider, isCorrectNetwork]);
 
     const loading = loadingChain || loadingBackend;
 
