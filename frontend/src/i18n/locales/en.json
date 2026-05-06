@@ -1,0 +1,65 @@
+{
+  "navbar": {
+    "signIn": "Sign In",
+    "register": "Register",
+    "logout": "Logout",
+    "connectWallet": "Connect Wallet",
+    "connecting": "Connecting...",
+    "switchToAmoy": "Switch to Amoy"
+  },
+  "login": {
+    "title": "Sign in to RecycleChain",
+    "connectWalletLogin": "Connect Wallet & Login",
+    "loginWithWallet": "Login with Connected Wallet",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "noAccount": "No account?",
+    "registerHere": "Register here",
+    "errorInvalidCredentials": "Invalid email or password",
+    "errorWalletNotRegistered": "Wallet not registered. Please sign up first."
+  },
+  "register": {
+    "title": "Create your account",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "walletAddress": "Wallet Address",
+    "walletOptional": "(optional)",
+    "connectMetaMask": "Connect MetaMask",
+    "createAccount": "Create Account",
+    "creatingAccount": "Creating account...",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorGeneric": "Registration failed. Please try again."
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back",
+    "loadingData": "Loading data...",
+    "totalRecycled": "Total Recycled",
+    "rctEarned": "RCT Earned",
+    "walletBalance": "Wallet Balance",
+    "totalEvents": "Total Events",
+    "eventBonus": "Event Bonus",
+    "eventTier": "Event Tier",
+    "recyclingHistory": "Recycling History",
+    "station": "Station",
+    "material": "Material",
+    "weight": "Weight",
+    "tokens": "Tokens",
+    "date": "Date",
+    "noEvents": "No recycling events yet. Visit a station to get started!",
+    "refresh": "Refresh",
+    "never": "Never"
+  },
+  "stations": {
+    "title": "Recycling Stations",
+    "activeStations_one": "{{count}} active station available",
+    "activeStations_other": "{{count}} active stations available",
+    "errorLoading": "Error loading stations: "
+  }
+}

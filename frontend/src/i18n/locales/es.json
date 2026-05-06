@@ -1,0 +1,65 @@
+{
+  "navbar": {
+    "signIn": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "connectWallet": "Conectar cartera",
+    "connecting": "Conectando...",
+    "switchToAmoy": "Cambiar a Amoy"
+  },
+  "login": {
+    "title": "Iniciar sesión en RecycleChain",
+    "connectWalletLogin": "Conectar cartera e iniciar sesión",
+    "loginWithWallet": "Iniciar sesión con cartera conectada",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signIn": "Iniciar sesión",
+    "signingIn": "Iniciando sesión...",
+    "noAccount": "¿No tienes cuenta?",
+    "registerHere": "Regístrate aquí",
+    "errorInvalidCredentials": "Correo o contraseña incorrectos",
+    "errorWalletNotRegistered": "Cartera no registrada. Por favor, regístrate primero."
+  },
+  "register": {
+    "title": "Crear tu cuenta",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "walletAddress": "Dirección de cartera",
+    "walletOptional": "(opcional)",
+    "connectMetaMask": "Conectar MetaMask",
+    "createAccount": "Crear cuenta",
+    "creatingAccount": "Creando cuenta...",
+    "alreadyHaveAccount": "¿Ya tienes cuenta?",
+    "signIn": "Inicia sesión",
+    "errorPasswordMismatch": "Las contraseñas no coinciden",
+    "errorGeneric": "Error en el registro. Por favor, inténtalo de nuevo."
+  },
+  "dashboard": {
+    "welcomeBack": "Bienvenido de nuevo",
+    "loadingData": "Cargando datos...",
+    "totalRecycled": "Total reciclado",
+    "rctEarned": "RCT ganados",
+    "walletBalance": "Saldo de cartera",
+    "totalEvents": "Total de eventos",
+    "eventBonus": "Bonus de evento",
+    "eventTier": "Nivel de evento",
+    "recyclingHistory": "Historial de reciclaje",
+    "station": "Estación",
+    "material": "Material",
+    "weight": "Peso",
+    "tokens": "Tokens",
+    "date": "Fecha",
+    "noEvents": "Aún no hay eventos de reciclaje. ¡Visita una estación para empezar!",
+    "refresh": "Actualizar",
+    "never": "Nunca"
+  },
+  "stations": {
+    "title": "Estaciones de reciclaje",
+    "activeStations_one": "{{count}} estación activa disponible",
+    "activeStations_other": "{{count}} estaciones activas disponibles",
+    "errorLoading": "Error cargando estaciones: "
+  }
+}
