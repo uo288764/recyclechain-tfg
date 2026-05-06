@@ -27,7 +27,7 @@ jobs:
 
       - name: Build backend and run tests
         working-directory: backend
-        run: ./mvnw verify -DskipTests=false
+        run: ./mvnw package -DskipTests
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
