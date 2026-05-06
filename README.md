@@ -1,13 +1,3 @@
-# Sample Hardhat Project
-
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=uo288764_recyclechain-tfg&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=uo288764_recyclechain-tfg)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=uo288764_recyclechain-tfg&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=uo288764_recyclechain-tfg)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=uo288764_recyclechain-tfg&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=uo288764_recyclechain-tfg)
