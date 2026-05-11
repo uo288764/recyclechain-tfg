@@ -4,7 +4,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=uo288764_recyclechain-tfg&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=uo288764_recyclechain-tfg)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=uo288764_recyclechain-tfg&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=uo288764_recyclechain-tfg)
 
-Blockchain-based recycling incentive platform. Users earn ERC-20 tokens (RCT) for recycling at registered stations. Built as a Final Degree Project (TFG) at the Universidad de Oviedo.
+Blockchain-based recycling incentive platform. Users earn ERC-20 tokens (RCT) for recycling at registered stations. Built as a Final Degree Project (TFG) at the University of Oviedo.
 
 ## Stack
 
