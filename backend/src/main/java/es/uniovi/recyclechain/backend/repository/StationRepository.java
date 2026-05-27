@@ -15,4 +15,7 @@ public interface StationRepository extends JpaRepository<Station, Long> {
     Optional<Station> findByWalletAddress(String walletAddress);
     
     boolean existsByWalletAddress(String walletAddress);
+
+    long countByIsActiveTrue();
+
 }
