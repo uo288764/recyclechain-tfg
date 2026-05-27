@@ -10,8 +10,8 @@ import Dashboard from "./components/Dashboard";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import StationsPage from "./pages/StationsPage";
+import AdminPage from "./pages/AdminPage";
 import { useTranslation } from "react-i18next";
-
 
 // Redirects unauthenticated users to /login
 const ProtectedRoute = ({ children }) => {
@@ -22,9 +22,21 @@ const ProtectedRoute = ({ children }) => {
     return children;
 };
 
+// Redirects non-admin users to /
+const AdminRoute = ({ children }) => {
+    const { isAuthenticated, user } = useAuthContext();
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+    if (user?.role !== "ROLE_ADMIN") {
+        return <Navigate to="/" replace />;
+    }
+    return children;
+};
+
 // Secondary nav shown only when authenticated
 const SubNav = () => {
-    const { isAuthenticated } = useAuthContext();
+    const { isAuthenticated, user } = useAuthContext();
     const { t } = useTranslation();
     if (!isAuthenticated) { return null; }
 
@@ -37,8 +49,13 @@ const SubNav = () => {
 
     return (
         <div className="bg-gray-900 border-b border-gray-800 px-6 py-2 flex gap-2">
-            <NavLink to="/" end className={linkClass}>{t("navbar.dashboard")}</NavLink>
+            {user?.role !== "ROLE_ADMIN" && (
+                <NavLink to="/" end className={linkClass}>{t("navbar.dashboard")}</NavLink>
+            )}
             <NavLink to="/stations" className={linkClass}>{t("navbar.stations")}</NavLink>
+            {user?.role === "ROLE_ADMIN" && (
+                <NavLink to="/admin" className={linkClass}>{t("navbar.admin")}</NavLink>
+            )}
         </div>
     );
 };
@@ -66,6 +83,14 @@ const AppRoutes = () => {
                             <ProtectedRoute>
                                 <StationsPage />
                             </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin"
+                        element={
+                            <AdminRoute>
+                                <AdminPage />
+                            </AdminRoute>
                         }
                     />
                     <Route path="*" element={<Navigate to="/" replace />} />

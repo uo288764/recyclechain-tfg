@@ -7,7 +7,8 @@
     "connecting": "Conectando...",
     "switchToAmoy": "Cambiar a Amoy",
     "dashboard": "Panel",
-    "stations": "Estaciones"
+    "stations": "Estaciones",
+    "admin": "Admin"
   },
   
   "login": {
@@ -64,5 +65,37 @@
     "activeStations_one": "{{count}} estación activa disponible",
     "activeStations_other": "{{count}} estaciones activas disponibles",
     "errorLoading": "Error cargando estaciones: "
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "stations": {
+        "title": "Gestión de Estaciones",
+        "new": "Nueva Estación",
+        "create": "Crear Estación",
+        "cancel": "Cancelar",
+        "name": "Nombre",
+        "address": "Dirección",
+        "latitude": "Latitud",
+        "longitude": "Longitud",
+        "walletAddress": "Dirección Wallet (opcional)",
+        "activate": "Activar",
+        "deactivate": "Desactivar",
+        "active": "Activa",
+        "inactive": "Inactiva",
+        "created": "Creada",
+        "errorLoad": "Error al cargar las estaciones",
+        "errorCreate": "Error al crear la estación",
+        "errorToggle": "Error al actualizar el estado de la estación"
+    },
+    "stats": {
+    "title": "Estadísticas Globales",
+    "totalEvents": "Eventos Totales",
+    "totalWeightKg": "Peso Total",
+    "totalTokens": "Tokens Emitidos",
+    "activeUsers": "Usuarios Activos",
+    "totalStations": "Estaciones Totales",
+    "activeStations": "Estaciones Activas",
+    "errorLoad": "Error al cargar las estadísticas"
   }
+}
 }

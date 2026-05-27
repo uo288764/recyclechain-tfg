@@ -7,7 +7,8 @@
     "connecting": "Connecting...",
     "switchToAmoy": "Switch to Amoy",
     "dashboard": "Dashboard",
-    "stations": "Stations"
+    "stations": "Stations",
+    "admin": "Admin"
   },
   "login": {
     "title": "Sign in to RecycleChain",
@@ -63,5 +64,37 @@
     "activeStations_one": "{{count}} active station available",
     "activeStations_other": "{{count}} active stations available",
     "errorLoading": "Error loading stations: "
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "stations": {
+        "title": "Station Management",
+        "new": "New Station",
+        "create": "Create Station",
+        "cancel": "Cancel",
+        "name": "Name",
+        "address": "Address",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "walletAddress": "Wallet Address (optional)",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "active": "Active",
+        "inactive": "Inactive",
+        "created": "Created",
+        "errorLoad": "Error loading stations",
+        "errorCreate": "Error creating station",
+        "errorToggle": "Error updating station status"
+    },
+    "stats": {
+    "title": "Global Statistics",
+    "totalEvents": "Total Events",
+    "totalWeightKg": "Total Weight",
+    "totalTokens": "Total Tokens Issued",
+    "activeUsers": "Active Users",
+    "totalStations": "Total Stations",
+    "activeStations": "Active Stations",
+    "errorLoad": "Error loading statistics"
   }
+}
 }
