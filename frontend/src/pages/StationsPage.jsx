@@ -1,12 +1,27 @@
 // src/pages/StationsPage.jsx
 //
-// Displays all active recycling stations fetched from the backend.
-// Shows station name, address and a link to Google Maps coordinates.
+// Shows all active recycling stations with an OpenStreetMap map.
+// Uses Leaflet + react-leaflet. 
 
 import { useState, useEffect } from "react";
-import { MapPin, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { stationService } from "../services/stationService";
 import { useTranslation } from "react-i18next";
+
+// Fix Leaflet markers, as Vite defaults fail
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: new URL("leaflet/dist/images/marker-icon-2x.png", import.meta.url).href,
+    iconUrl:       new URL("leaflet/dist/images/marker-icon.png",    import.meta.url).href,
+    shadowUrl:     new URL("leaflet/dist/images/marker-shadow.png",  import.meta.url).href,
+});
+
+// Default map center when no stations are loaded yet
+const ASTURIAS_CENTER = [43.3614, -5.8593];
+const DEFAULT_ZOOM = 11;
 
 const StationsPage = () => {
     const [stations, setStations] = useState([]);
@@ -33,7 +48,7 @@ const StationsPage = () => {
         return (
             <div className="flex items-center justify-center min-h-[60vh] gap-2 text-gray-400">
                 <Loader size={20} className="animate-spin" />
-                Loading stations...
+                {t("stations.loading")}
             </div>
         );
     }
@@ -47,46 +62,45 @@ const StationsPage = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-6 py-10">
+        <div className="max-w-5xl mx-auto px-6 py-10">
             <h1 className="text-3xl font-bold text-green-400 mb-2">
                 {t("stations.title")}
             </h1>
-            <p className="text-gray-400 text-sm mb-8">
+            <p className="text-gray-400 text-sm mb-6">
                 {t("stations.activeStations", { count: stations.length })}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {stations.map((station) => (
-                    <StationCard key={station.id} station={station} />
-                ))}
+            {/* Map container */}
+            <div className="rounded-xl overflow-hidden border border-gray-800" style={{ height: "520px" }}>
+                <MapContainer
+                    center={ASTURIAS_CENTER}
+                    zoom={DEFAULT_ZOOM}
+                    style={{ height: "100%", width: "100%" }}
+                >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    {stations.map((station) => (
+                        <StationMarker key={station.id} station={station} />
+                    ))}
+                </MapContainer>
             </div>
         </div>
     );
 };
 
-const StationCard = ({ station }) => {
-    const mapsUrl = `https://www.google.com/maps?q=${station.latitude},${station.longitude}`;
-
+const StationMarker = ({ station }) => {
     return (
-        <div className="bg-gray-900 border border-gray-800 hover:border-green-800 rounded-xl p-5 transition-colors">
-            <div className="flex items-start gap-3">
-                <div className="text-green-400 mt-0.5">
-                    <MapPin size={20} />
+        <Marker position={[station.latitude, station.longitude]}>
+            <Popup>
+                <div style={{ minWidth: "160px" }}>
+                    <p style={{ fontWeight: "600", marginBottom: "4px" }}>{station.name}</p>
+                    <p style={{ color: "#6b7280", fontSize: "0.8rem" }}>{station.address}</p>
                 </div>
-                <div className="flex-1">
-                    <h3 className="text-white font-semibold mb-1">{station.name}</h3>
-                    <p className="text-gray-400 text-sm mb-3">{station.address}</p>
-                    
-                        href={mapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-500 hover:text-green-400 text-xs font-mono transition-colors"
-                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 text-xs font-mono transition-colors">
-                        {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)} →
-                    </a>
-                </div>
-            </div>
-        </div>
+            </Popup>
+        </Marker>
     );
 };
 
