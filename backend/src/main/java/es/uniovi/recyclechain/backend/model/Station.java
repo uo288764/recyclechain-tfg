@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "station")
@@ -31,6 +32,14 @@ public class Station {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    /**
+     * HMAC-SHA256 secret key for QR code generation and validation.
+     * Generated automatically on station creation.
+     * Never exposed in API responses (excluded from StationResponse DTO).
+     */
+    @Column(name = "secret_key", nullable = false, unique = true)
+    private String secretKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -46,82 +55,45 @@ public class Station {
         this.latitude = latitude;
         this.longitude = longitude;
         this.isActive = true;
+        this.secretKey = UUID.randomUUID().toString();
     }
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (this.secretKey == null) {
+            this.secretKey = UUID.randomUUID().toString();
+        }
     }
 
-    // Getters y Setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public String getAddress() {
-        return address;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    public String getWalletAddress() { return walletAddress; }
+    public void setWalletAddress(String walletAddress) { this.walletAddress = walletAddress; }
 
-    public Double getLatitude() {
-        return latitude;
-    }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
+    public String getSecretKey() { return secretKey; }
+    public void setSecretKey(String secretKey) { this.secretKey = secretKey; }
 
-    public Double getLongitude() {
-        return longitude;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public String getWalletAddress() {
-        return walletAddress;
-    }
-
-    public void setWalletAddress(String walletAddress) {
-        this.walletAddress = walletAddress;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public List<RecyclingEvent> getRecyclingEvents() {
-        return recyclingEvents;
-    }
-
+    public List<RecyclingEvent> getRecyclingEvents() { return recyclingEvents; }
     public void setRecyclingEvents(List<RecyclingEvent> recyclingEvents) {
         this.recyclingEvents = recyclingEvents;
     }
