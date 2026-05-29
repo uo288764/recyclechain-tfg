@@ -6,35 +6,34 @@ import es.uniovi.recyclechain.backend.model.RecyclingEvent;
 import es.uniovi.recyclechain.backend.model.Station;
 import es.uniovi.recyclechain.backend.model.User;
 import es.uniovi.recyclechain.backend.security.CustomUserDetails;
+import es.uniovi.recyclechain.backend.service.QRValidationService;
 import es.uniovi.recyclechain.backend.service.RecyclingEventService;
 import es.uniovi.recyclechain.backend.service.StationService;
 import es.uniovi.recyclechain.backend.validator.RecyclingEventValidator;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Recycling Event Controller
  *
  * Handles all REST endpoints related to recycling events, including:
- * - Recording new recycling events
+ * - Recording new recycling events (with QR fraud prevention)
  * - Retrieving user recycling history
  * - Displaying user statistics and achievements
  *
- * All endpoints require authentication (JWT token).
- * Only users with ROLE_USER or ROLE_ADMIN can access these endpoints.
+ * The /record endpoint validates the scanned QR payload via HMAC-SHA256
+ * before processing the recycling event, satisfying FR-06, FR-21, FR-22.
  *
  * Base URL: /api/recycling
- *
- * @author Carlos
- * @version 1.0
- * @since Sprint 3
  */
 @RestController
 @RequestMapping("/api/recycling")
@@ -49,12 +48,11 @@ public class RecyclingEventController {
     @Autowired
     private RecyclingEventValidator recyclingEventValidator;
 
+    @Autowired
+    private QRValidationService qrValidationService;
+
     /**
-     * Get recycling history for the authenticated user
-     * Returns all recycling events ordered by date (newest first)
-     *
-     * @param userDetails Authenticated user details
-     * @return List of recycling events with full details
+     * Get recycling history for the authenticated user.
      */
     @GetMapping("/history")
     public ResponseEntity<List<RecyclingEventResponse>> getHistory(
@@ -82,13 +80,14 @@ public class RecyclingEventController {
     }
 
     /**
-     * Record a new recycling event
-     * Validates the event, calculates tokens with bonuses, and saves to database
+     * Record a new recycling event.
      *
-     * @param userDetails Authenticated user details
-     * @param request Recycling event details (station, weight, material type)
-     * @param result Validation result
-     * @return Created recycling event with calculated tokens
+     * Validation order:
+     *   1. Bean validation (@Valid) on request fields
+     *   2. Custom validator (RecyclingEventValidator)
+     *   3. Station existence and active status
+     *   4. QR payload HMAC-SHA256 validation + single-use check (FR-06, FR-21, FR-22)
+     *   5. Gamification engine + persistence
      */
     @PostMapping("/record")
     public ResponseEntity<?> recordEvent(
@@ -105,7 +104,26 @@ public class RecyclingEventController {
         User user = userDetails.getUser();
         Station station = stationService.getStation(request.getStationId());
 
-        // Service calculates tokens with all bonuses applied
+        if (station == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Station not found"));
+        }
+
+        if (!Boolean.TRUE.equals(station.getIsActive())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Station is not active"));
+        }
+
+        // QR validation: HMAC-SHA256 + time window + single-use (FR-06, FR-21, FR-22)
+        boolean qrValid = qrValidationService.validateAndConsume(
+                request.getQrPayload(), station
+        );
+
+        if (!qrValid) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(Map.of("error", "Invalid or expired QR code"));
+        }
+
         RecyclingEvent event = recyclingEventService.addRecyclingEvent(
                 user,
                 station,
@@ -131,14 +149,7 @@ public class RecyclingEventController {
     }
 
     /**
-     * Get comprehensive statistics for the authenticated user
-     * Includes:
-     * - Total events, weight, and tokens
-     * - Current multipliers (event and weight bonuses)
-     * - Achievement tiers (internationalized)
-     *
-     * @param userDetails Authenticated user details
-     * @return User statistics with achievements
+     * Get comprehensive statistics for the authenticated user.
      */
     @GetMapping("/stats")
     public ResponseEntity<?> getStats(@AuthenticationPrincipal CustomUserDetails userDetails) {

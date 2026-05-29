@@ -1,27 +1,35 @@
 package es.uniovi.recyclechain.backend.dto;
 
+import lombok.Data;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import lombok.Getter;
-import lombok.Setter;
 
-@Setter
-@Getter
+/**
+ * DTO for recording a new recycling event.
+ * The qrPayload field carries the scanned QR code content,
+ * which the backend validates via HMAC-SHA256 before processing.
+ */
+@Data
 public class RecyclingEventRequest {
 
-    @NotNull(message = "Station ID is required")
+    @NotNull
     private Long stationId;
 
-    @NotNull(message = "Weight is required")
-    @Positive(message = "Weight must be positive")
+    @NotNull
+    @Positive
     private Double weight;
 
-    @NotNull(message = "Material type is required")
+    @NotBlank
     private String materialType;
 
+    /**
+     * Raw QR code payload scanned by the user at the recycling station.
+     * Format: {stationId}:{timestampWindow}:{hmac}
+     * Validated by QRValidationService before the recycling event is processed.
+     */
+    @NotBlank
+    private String qrPayload;
+
     private String transactionHash;
-
-    public RecyclingEventRequest() {
-    }
-
 }
