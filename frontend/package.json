@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
+    "@yudiel/react-qr-scanner": "^2.6.0",
     "axios": "^1.14.0",
     "ethers": "^6.16.0",
     "i18next": "^26.0.9",
