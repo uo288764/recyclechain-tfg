@@ -2,6 +2,8 @@
 //
 // Main user dashboard. Combines on-chain data (token balance via ethers.js)
 // with off-chain data (stats, history, tiers) from the Spring Boot backend.
+// Includes QR scanner modal for recording recycling events (FR-05).
+// QR scan button is hidden for ROLE_ADMIN users.
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
@@ -9,13 +11,16 @@ import { useWalletContext } from "../hooks/WalletContext";
 import { useAuthContext } from "../hooks/AuthContext";
 import { getContract } from "../utils/contract";
 import { recyclingService } from "../services/recyclingService";
-import { Scale, Coins, Wallet, Calendar, Trophy, Zap } from "lucide-react";
+import { Scale, Coins, Wallet, Calendar, Trophy, Zap, QrCode } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import QRScanner from "./QRScanner";
 
 const Dashboard = () => {
     const { account, provider, isCorrectNetwork } = useWalletContext();
     const { user } = useAuthContext();
     const { t } = useTranslation();
+
+    const isAdmin = user?.role === "ROLE_ADMIN";
 
     const [chainStats, setChainStats] = useState({
         balance: 0,
@@ -29,6 +34,8 @@ const Dashboard = () => {
     const [loadingChain, setLoadingChain] = useState(false);
     const [loadingBackend, setLoadingBackend] = useState(false);
     const [error, setError] = useState(null);
+    const [showScanner, setShowScanner] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     const fetchChainStats = async () => {
         if (!account || !provider || !isCorrectNetwork) { return; }
@@ -74,6 +81,19 @@ const Dashboard = () => {
         fetchBackendData();
     };
 
+    /**
+     * Called by QRScanner on a successful recycling event submission.
+     * Refreshes all data and shows a temporary success message.
+     */
+    const handleScanSuccess = (eventResponse) => {
+        setShowScanner(false);
+        setSuccessMessage(
+            t("dashboard.scanSuccess", { tokens: eventResponse.tokensEarned })
+        );
+        handleRefresh();
+        setTimeout(() => setSuccessMessage(null), 5000);
+    };
+
     useEffect(() => {
         fetchBackendData();
     }, []);
@@ -89,18 +109,38 @@ const Dashboard = () => {
     return (
         <div className="max-w-4xl mx-auto px-6 py-10">
 
-            <h1 className="text-3xl font-bold text-green-400 mb-1">
-                {t("dashboard.welcomeBack")}, {user?.name}
-            </h1>
-            {account && (
-                <p className="text-gray-500 text-sm font-mono mb-8">{account}</p>
-            )}
+            <div className="flex items-start justify-between mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-green-400 mb-1">
+                        {t("dashboard.welcomeBack")}, {user?.name}
+                    </h1>
+                    {account && (
+                        <p className="text-gray-500 text-sm font-mono">{account}</p>
+                    )}
+                </div>
+
+                {/* QR scan button — only shown to ROLE_USER, never to ROLE_ADMIN */}
+                {!isAdmin && (
+                    <button
+                        onClick={() => setShowScanner(true)}
+                        className="flex items-center gap-2 bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                    >
+                        <QrCode size={18} />
+                        {t("dashboard.scanQR")}
+                    </button>
+                )}
+            </div>
 
             {loading && (
                 <p className="text-gray-400 text-sm mb-4">{t("dashboard.loadingData")}</p>
             )}
             {error && (
                 <p className="text-red-400 text-sm mb-4">{error}</p>
+            )}
+            {successMessage && (
+                <div className="bg-green-900/30 border border-green-700 text-green-400 text-sm rounded-lg px-4 py-3 mb-4">
+                    {successMessage}
+                </div>
             )}
 
             {/* Main stats grid */}
@@ -114,13 +154,13 @@ const Dashboard = () => {
                 <StatCard
                     icon={<Coins size={28} />}
                     label={t("dashboard.rctEarned")}
-                    value={`${backendStats?.totalTokensEarned ?? chainStats.totalRewards} RCT`}
+                    value={`${backendStats?.totalTokensEarned ?? chainStats.totalRewards} RCYC`}
                     color="yellow"
                 />
                 <StatCard
                     icon={<Wallet size={28} />}
                     label={t("dashboard.walletBalance")}
-                    value={account ? `${chainStats.balance} RCT` : "—"}
+                    value={account ? `${chainStats.balance} RCYC` : "—"}
                     color="blue"
                 />
                 <StatCard
@@ -193,6 +233,14 @@ const Dashboard = () => {
             >
                 ↻ {t("dashboard.refresh")}
             </button>
+
+            {/* QR Scanner — only reachable by ROLE_USER (button is hidden for admin) */}
+            {showScanner && !isAdmin && (
+                <QRScanner
+                    onSuccess={handleScanSuccess}
+                    onClose={() => setShowScanner(false)}
+                />
+            )}
         </div>
     );
 };

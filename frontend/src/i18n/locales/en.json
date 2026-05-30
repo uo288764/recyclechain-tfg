@@ -8,7 +8,7 @@
     "switchToAmoy": "Switch to Amoy",
     "dashboard": "Dashboard",
     "stations": "Stations",
-    "admin": "Admin"
+    "admin": "Dashboard"
   },
   "login": {
     "title": "Sign in to RecycleChain",
@@ -44,7 +44,7 @@
     "welcomeBack": "Welcome back",
     "loadingData": "Loading data...",
     "totalRecycled": "Total Recycled",
-    "rctEarned": "RCT Earned",
+    "rctEarned": "RCYC Earned",
     "walletBalance": "Wallet Balance",
     "totalEvents": "Total Events",
     "eventBonus": "Event Bonus",
@@ -57,7 +57,9 @@
     "date": "Date",
     "noEvents": "No recycling events yet. Visit a station to get started!",
     "refresh": "Refresh",
-    "never": "Never"
+    "never": "Never",
+    "scanQR": "Scan QR",
+    "scanSuccess": "Recycling recorded! You earned {{tokens}} RCYC tokens."
   },
   "stations": {
     "title": "Recycling Stations",
@@ -68,33 +70,55 @@
   "admin": {
     "title": "Admin Panel",
     "stations": {
-        "title": "Station Management",
-        "new": "New Station",
-        "create": "Create Station",
-        "cancel": "Cancel",
-        "name": "Name",
-        "address": "Address",
-        "latitude": "Latitude",
-        "longitude": "Longitude",
-        "walletAddress": "Wallet Address (optional)",
-        "activate": "Activate",
-        "deactivate": "Deactivate",
-        "active": "Active",
-        "inactive": "Inactive",
-        "created": "Created",
-        "errorLoad": "Error loading stations",
-        "errorCreate": "Error creating station",
-        "errorToggle": "Error updating station status"
+      "title": "Station Management",
+      "new": "New Station",
+      "create": "Create Station",
+      "cancel": "Cancel",
+      "name": "Name",
+      "address": "Address",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "walletAddress": "Wallet Address (optional)",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "active": "Active",
+      "inactive": "Inactive",
+      "created": "Created",
+      "errorLoad": "Error loading stations",
+      "errorCreate": "Error creating station",
+      "errorToggle": "Error updating station status"
     },
     "stats": {
-    "title": "Global Statistics",
-    "totalEvents": "Total Events",
-    "totalWeightKg": "Total Weight",
-    "totalTokens": "Total Tokens Issued",
-    "activeUsers": "Active Users",
-    "totalStations": "Total Stations",
-    "activeStations": "Active Stations",
-    "errorLoad": "Error loading statistics"
+      "title": "Global Statistics",
+      "totalEvents": "Total Events",
+      "totalWeightKg": "Total Weight",
+      "totalTokens": "Total Tokens Issued",
+      "activeUsers": "Active Users",
+      "totalStations": "Total Stations",
+      "activeStations": "Active Stations",
+      "errorLoad": "Error loading statistics"
+    }
+  },
+  "qrScanner": {
+    "title": "Scan Recycling Station QR",
+    "cameraError": "Could not access camera. Please check permissions.",
+    "noQrDetected": "No QR code detected yet. Point your camera at the station QR.",
+    "invalidWeight": "Please enter a valid weight greater than zero.",
+    "invalidPayload": "Invalid QR code format. Please scan the station QR code.",
+    "submissionError": "An error occurred while recording the event. Please try again.",
+    "qrDetected": "QR code detected. Enter recycling details below.",
+    "weightLabel": "Weight (kg)",
+    "materialLabel": "Material Type",
+    "rescan": "Rescan",
+    "submit": "Record Recycling",
+    "submitting": "Recording...",
+    "instructions": "Point your camera at the QR code displayed at the recycling station.",
+    "material": {
+      "plastic": "Plastic",
+      "metal": "Metal",
+      "glass": "Glass",
+      "paper": "Paper",
+      "organic": "Organic"
+    }
   }
-}
 }
