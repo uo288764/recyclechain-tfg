@@ -13,24 +13,56 @@ import StationsPage from "./pages/StationsPage";
 import AdminPage from "./pages/AdminPage";
 import { useTranslation } from "react-i18next";
 
-// Redirects unauthenticated users to /login
-const ProtectedRoute = ({ children }) => {
+/**
+ * Redirects unauthenticated users to /login.
+ * Accessible by any authenticated user regardless of role.
+ * Used for shared routes like /stations.
+ */
+const AuthRoute = ({ children }) => {
     const { isAuthenticated } = useAuthContext();
+
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
+
     return children;
 };
 
-// Redirects non-admin users to /
-const AdminRoute = ({ children }) => {
+/**
+ * Redirects unauthenticated users to /login.
+ * Redirects ROLE_ADMIN users away from / to /admin —
+ * admin users have no access to the user dashboard.
+ */
+const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, user } = useAuthContext();
+
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
+
+    if (user?.role === "ROLE_ADMIN") {
+        return <Navigate to="/admin" replace />;
+    }
+
+    return children;
+};
+
+/**
+ * Redirects unauthenticated users to /login.
+ * Redirects ROLE_USER away from /admin to / —
+ * regular users have no access to the admin panel.
+ */
+const AdminRoute = ({ children }) => {
+    const { isAuthenticated, user } = useAuthContext();
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
     if (user?.role !== "ROLE_ADMIN") {
         return <Navigate to="/" replace />;
     }
+
     return children;
 };
 
@@ -38,6 +70,7 @@ const AdminRoute = ({ children }) => {
 const SubNav = () => {
     const { isAuthenticated, user } = useAuthContext();
     const { t } = useTranslation();
+
     if (!isAuthenticated) { return null; }
 
     const linkClass = ({ isActive }) =>
@@ -49,12 +82,16 @@ const SubNav = () => {
 
     return (
         <div className="bg-gray-900 border-b border-gray-800 px-6 py-2 flex gap-2">
-            {user?.role !== "ROLE_ADMIN" && (
-                <NavLink to="/" end className={linkClass}>{t("navbar.dashboard")}</NavLink>
-            )}
-            <NavLink to="/stations" className={linkClass}>{t("navbar.stations")}</NavLink>
-            {user?.role === "ROLE_ADMIN" && (
-                <NavLink to="/admin" className={linkClass}>{t("navbar.admin")}</NavLink>
+            {user?.role === "ROLE_ADMIN" ? (
+                <>
+                    <NavLink to="/stations" className={linkClass}>{t("navbar.stations")}</NavLink>
+                    <NavLink to="/admin" className={linkClass}>{t("navbar.admin")}</NavLink>
+                </>
+            ) : (
+                <>
+                    <NavLink to="/stations" className={linkClass}>{t("navbar.stations")}</NavLink>
+                    <NavLink to="/" end className={linkClass}>{t("navbar.dashboard")}</NavLink>
+                </>
             )}
         </div>
     );
@@ -69,6 +106,8 @@ const AppRoutes = () => {
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+
+                    {/* User dashboard — ROLE_ADMIN is redirected to /admin */}
                     <Route
                         path="/"
                         element={
@@ -77,14 +116,17 @@ const AppRoutes = () => {
                             </ProtectedRoute>
                         }
                     />
+
                     <Route
                         path="/stations"
                         element={
-                            <ProtectedRoute>
+                            <AuthRoute>
                                 <StationsPage />
-                            </ProtectedRoute>
+                            </AuthRoute>
                         }
                     />
+
+                    {/* Admin panel — ROLE_USER is redirected to / */}
                     <Route
                         path="/admin"
                         element={
@@ -93,6 +135,7 @@ const AppRoutes = () => {
                             </AdminRoute>
                         }
                     />
+
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </main>
