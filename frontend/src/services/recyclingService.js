@@ -18,12 +18,22 @@ export const recyclingService = {
         return response.data;
     },
 
-    // Record a new recycling event
-    recordEvent: async (stationId, weight, materialType, transactionHash) => {
+    /**
+     * Record a new recycling event.
+     *
+     * @param {Object} params
+     * @param {number} params.stationId       - Station database ID (extracted from QR payload)
+     * @param {number} params.weight          - Weight in kilograms
+     * @param {string} params.materialType    - Material type (plastic, metal, glass, paper, organic)
+     * @param {string} params.qrPayload       - Raw QR payload scanned at the station
+     * @param {string} [params.transactionHash] - Optional on-chain transaction hash
+     */
+    recordEvent: async ({ stationId, weight, materialType, qrPayload, transactionHash }) => {
         const response = await apiClient.post("/recycling/record", {
             stationId,
             weight,
             materialType,
+            qrPayload,
             transactionHash: transactionHash || null,
         });
         return response.data;
