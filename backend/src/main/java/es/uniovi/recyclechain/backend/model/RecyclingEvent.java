@@ -114,4 +114,16 @@ public class RecyclingEvent {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    /**
+     * The campaign under which this recycling event was registered.
+     * Mandatory — recycling events cannot be registered outside an active campaign.
+     * This enables per-campaign token aggregation for the lottery draw.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id", nullable = false)
+    private Campaign campaign;
+
+    public Campaign getCampaign() { return campaign; }
+    public void setCampaign(Campaign campaign) { this.campaign = campaign; }
 }
