@@ -25,8 +25,8 @@ const LoginPage = () => {
         e.preventDefault();
         setFormError(null);
         try {
-            await login(email, password);
-            navigate("/");
+            const data = await login(email, password);
+            navigate(data.role === "ROLE_ADMIN" ? "/admin" : "/");
         } catch {
             setFormError(t("login.errorInvalidCredentials"));
         }
@@ -38,8 +38,8 @@ const LoginPage = () => {
             if (!account) {
                 await connect();
             }
-            await walletLogin(account);
-            navigate("/");
+            const data = await walletLogin(account);
+            navigate(data.role === "ROLE_ADMIN" ? "/admin" : "/");
         } catch {
             setFormError(t("login.errorWalletNotRegistered"));
         }
