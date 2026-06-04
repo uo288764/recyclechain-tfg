@@ -2,10 +2,12 @@ package es.uniovi.recyclechain.backend.controller;
 
 import es.uniovi.recyclechain.backend.dto.RecyclingEventRequest;
 import es.uniovi.recyclechain.backend.dto.RecyclingEventResponse;
+import es.uniovi.recyclechain.backend.model.Container;
 import es.uniovi.recyclechain.backend.model.RecyclingEvent;
 import es.uniovi.recyclechain.backend.model.Station;
 import es.uniovi.recyclechain.backend.model.User;
 import es.uniovi.recyclechain.backend.security.CustomUserDetails;
+import es.uniovi.recyclechain.backend.service.ContainerService;
 import es.uniovi.recyclechain.backend.service.QRValidationService;
 import es.uniovi.recyclechain.backend.service.RecyclingEventService;
 import es.uniovi.recyclechain.backend.service.StationService;
@@ -25,13 +27,14 @@ import java.util.stream.Collectors;
 /**
  * Recycling Event Controller
  *
- * Handles all REST endpoints related to recycling events, including:
- * - Recording new recycling events (with QR fraud prevention)
- * - Retrieving user recycling history
- * - Displaying user statistics and achievements
+ * Handles all REST endpoints related to recycling events.
  *
- * The /record endpoint validates the scanned QR payload via HMAC-SHA256
- * before processing the recycling event, satisfying FR-06, FR-21, FR-22.
+ * Sprint 8 — dual QR flow:
+ * When containerId is present in the request, weight and materialType are
+ * resolved from the ContainerBatch, and the container is transitioned to
+ * DEPOSITED state. Manual weight input is no longer accepted in this flow.
+ *
+ * Precondition: a Campaign in ACTIVE state must exist. Returns 409 otherwise.
  *
  * Base URL: /api/recycling
  */
@@ -51,13 +54,15 @@ public class RecyclingEventController {
     @Autowired
     private QRValidationService qrValidationService;
 
+    @Autowired
+    private ContainerService containerService;
+
     /**
      * Get recycling history for the authenticated user.
      */
     @GetMapping("/history")
     public ResponseEntity<List<RecyclingEventResponse>> getHistory(
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         User user = userDetails.getUser();
         List<RecyclingEvent> events = recyclingEventService.getRecyclingEventsByUser(user);
 
@@ -85,25 +90,26 @@ public class RecyclingEventController {
      * Validation order:
      *   1. Bean validation (@Valid) on request fields
      *   2. Custom validator (RecyclingEventValidator)
-     *   3. Station existence and active status
-     *   4. QR payload HMAC-SHA256 validation + single-use check (FR-06, FR-21, FR-22)
-     *   5. Gamification engine + persistence
+     *   3. Active campaign check — 409 if none exists
+     *   4. Station existence and active status
+     *   5. QR payload HMAC-SHA256 + single-use check (FR-06, FR-21, FR-22)
+     *   6. Container resolution (Sprint 8) or manual weight (legacy)
+     *   7. Gamification engine + persistence
      */
     @PostMapping("/record")
     public ResponseEntity<?> recordEvent(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody RecyclingEventRequest request,
-            BindingResult result
-    ) {
-        recyclingEventValidator.validate(request, result);
+            BindingResult result) {
 
+        recyclingEventValidator.validate(request, result);
         if (result.hasErrors()) {
             return ResponseEntity.badRequest().body(result.getAllErrors());
         }
 
         User user = userDetails.getUser();
-        Station station = stationService.getStation(request.getStationId());
 
+        Station station = stationService.getStation(request.getStationId());
         if (station == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Station not found"));
@@ -116,19 +122,40 @@ public class RecyclingEventController {
 
         // QR validation: HMAC-SHA256 + time window + single-use (FR-06, FR-21, FR-22)
         boolean qrValid = qrValidationService.validateAndConsume(
-                request.getQrPayload(), station
-        );
-
+                request.getQrPayload(), station);
         if (!qrValid) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(Map.of("error", "Invalid or expired QR code"));
         }
 
+        double weight;
+        String materialType;
+
+        if (request.getContainerId() != null) {
+            // Sprint 8 dual QR flow: resolve weight and material from ContainerBatch
+            // and transition the container to DEPOSITED state
+            Container container = containerService.depositContainer(
+                    request.getContainerId(), user);
+            weight = container.getBatch().getUnitWeightKg();
+            materialType = container.getBatch().getMaterialType();
+        } else {
+            // Legacy flow: weight and material provided manually
+            if (request.getWeight() == null || request.getMaterialType() == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error",
+                                "weight and materialType are required when containerId is absent"));
+            }
+            weight = request.getWeight();
+            materialType = request.getMaterialType();
+        }
+
+        // RecyclingEventService resolves the active campaign internally
+        // and returns 409 if none exists
         RecyclingEvent event = recyclingEventService.addRecyclingEvent(
                 user,
                 station,
-                request.getWeight(),
-                request.getMaterialType(),
+                weight,
+                materialType,
                 request.getTransactionHash()
         );
 
@@ -152,18 +179,22 @@ public class RecyclingEventController {
      * Get comprehensive statistics for the authenticated user.
      */
     @GetMapping("/stats")
-    public ResponseEntity<?> getStats(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<?> getStats(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         User user = userDetails.getUser();
-        RecyclingEventService.UserStats stats = recyclingEventService.getUserStats(user.getId());
+        RecyclingEventService.UserStats stats =
+                recyclingEventService.getUserStats(user.getId());
 
         return ResponseEntity.ok(new Object() {
-            public final int totalEvents = stats.totalEvents();
-            public final Double totalKg = stats.totalWeight();
+            public final int totalEvents       = stats.totalEvents();
+            public final Double totalKg        = stats.totalWeight();
             public final Double totalTokensEarned = stats.totalTokens();
-            public final Double eventMultiplier = stats.currentEventBonus();
-            public final Double weightMultiplier = stats.currentWeightBonus();
-            public final String eventTier = recyclingEventService.getEventTier(stats.totalEvents());
-            public final String weightTier = recyclingEventService.getWeightTier(stats.totalWeight());
+            public final Double eventMultiplier   = stats.currentEventBonus();
+            public final Double weightMultiplier  = stats.currentWeightBonus();
+            public final String eventTier =
+                    recyclingEventService.getEventTier(stats.totalEvents());
+            public final String weightTier =
+                    recyclingEventService.getWeightTier(stats.totalWeight());
         });
     }
 }
