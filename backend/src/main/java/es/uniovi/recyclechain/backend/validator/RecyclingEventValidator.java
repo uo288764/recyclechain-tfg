@@ -7,8 +7,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.util.Set;
+
 @Component
 public class RecyclingEventValidator implements Validator {
+
+    private static final Set<String> VALID_MATERIALS =
+            Set.of("plastic", "glass", "paper", "metal", "organic");
+
+    private static final double MAX_MANUAL_WEIGHT_KG = 100.0;
 
     @Autowired
     private StationService stationService;
@@ -22,29 +29,47 @@ public class RecyclingEventValidator implements Validator {
     public void validate(Object target, Errors errors) {
         RecyclingEventRequest request = (RecyclingEventRequest) target;
 
-        // Validate that the station is present and active
+        // Validate that the station exists and is active
         if (request.getStationId() != null) {
             var station = stationService.getStation(request.getStationId());
             if (station == null) {
-                errors.rejectValue("stationId", "Error.recyclingEvent.station.notFound");
+                errors.rejectValue("stationId",
+                        "Error.recyclingEvent.station.notFound");
             } else if (!station.getIsActive()) {
-                errors.rejectValue("stationId", "Error.recyclingEvent.station.inactive");
+                errors.rejectValue("stationId",
+                        "Error.recyclingEvent.station.inactive");
             }
         }
 
-        // Validate that the weight is reasonable (max 100kgs per event)
-        if (request.getWeight() != null && request.getWeight() > 100.0) {
-            errors.rejectValue("weight", "Error.recyclingEvent.weight.tooHigh");
-        }
+        if (request.getContainerId() != null) {
+            // Container flow: weight and material come from ContainerBatch.
+            // Manual weight and materialType fields must not be provided —
+            // accepting them would open a surface for parameter confusion.
+            if (request.getWeight() != null) {
+                errors.rejectValue("weight",
+                        "Error.recyclingEvent.weight.notAllowedWithContainer");
+            }
+            if (request.getMaterialType() != null) {
+                errors.rejectValue("materialType",
+                        "Error.recyclingEvent.materialType.notAllowedWithContainer");
+            }
+        } else {
+            // Manual flow: weight and materialType are required
+            if (request.getWeight() == null) {
+                errors.rejectValue("weight",
+                        "Error.recyclingEvent.weight.required");
+            } else if (request.getWeight() > MAX_MANUAL_WEIGHT_KG) {
+                errors.rejectValue("weight",
+                        "Error.recyclingEvent.weight.tooHigh");
+            }
 
-        // Validate the material type
-        if (request.getMaterialType() != null) {
-            String materialType = request.getMaterialType().toLowerCase();
-            if (!materialType.equals("plastic") && 
-                !materialType.equals("glass") && 
-                !materialType.equals("paper") && 
-                !materialType.equals("metal")) {
-                errors.rejectValue("materialType", "Error.recyclingEvent.materialType.invalid");
+            if (request.getMaterialType() == null || request.getMaterialType().isBlank()) {
+                errors.rejectValue("materialType",
+                        "Error.recyclingEvent.materialType.required");
+            } else if (!VALID_MATERIALS.contains(
+                    request.getMaterialType().toLowerCase())) {
+                errors.rejectValue("materialType",
+                        "Error.recyclingEvent.materialType.invalid");
             }
         }
     }
