@@ -1,6 +1,9 @@
 // src/App.jsx
 //
 // Root component. Sets up routing, global providers and navigation.
+//
+// Sprint 8: added /my-containers (MyContainersPage) and /campaigns (CampaignPage).
+// SubNav updated with links to new pages for ROLE_USER.
 
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from "react-router-dom";
 import { WalletProvider } from "./hooks/WalletContext";
@@ -11,12 +14,14 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import StationsPage from "./pages/StationsPage";
 import AdminPage from "./pages/AdminPage";
+import MyContainersPage from "./pages/MyContainersPage";
+import CampaignPage from "./pages/CampaignPage";
 import { useTranslation } from "react-i18next";
 
 /**
  * Redirects unauthenticated users to /login.
  * Accessible by any authenticated user regardless of role.
- * Used for shared routes like /stations.
+ * Used for shared routes like /stations and /campaigns.
  */
 const AuthRoute = ({ children }) => {
     const { isAuthenticated } = useAuthContext();
@@ -84,13 +89,27 @@ const SubNav = () => {
         <div className="bg-gray-900 border-b border-gray-800 px-6 py-2 flex gap-2">
             {user?.role === "ROLE_ADMIN" ? (
                 <>
-                    <NavLink to="/stations" className={linkClass}>{t("navbar.stations")}</NavLink>
-                    <NavLink to="/admin" className={linkClass}>{t("navbar.admin")}</NavLink>
+                    <NavLink to="/stations" className={linkClass}>
+                        {t("navbar.stations")}
+                    </NavLink>
+                    <NavLink to="/admin" className={linkClass}>
+                        {t("navbar.admin")}
+                    </NavLink>
                 </>
             ) : (
                 <>
-                    <NavLink to="/stations" className={linkClass}>{t("navbar.stations")}</NavLink>
-                    <NavLink to="/" end className={linkClass}>{t("navbar.dashboard")}</NavLink>
+                    <NavLink to="/stations" className={linkClass}>
+                        {t("navbar.stations")}
+                    </NavLink>
+                    <NavLink to="/" end className={linkClass}>
+                        {t("navbar.dashboard")}
+                    </NavLink>
+                    <NavLink to="/my-containers" className={linkClass}>
+                        {t("dashboard.myContainers")}
+                    </NavLink>
+                    <NavLink to="/campaigns" className={linkClass}>
+                        {t("dashboard.activeCampaign")}
+                    </NavLink>
                 </>
             )}
         </div>
@@ -122,6 +141,26 @@ const AppRoutes = () => {
                         element={
                             <AuthRoute>
                                 <StationsPage />
+                            </AuthRoute>
+                        }
+                    />
+
+                    {/* My containers — Step 2 of dual QR flow, ROLE_USER only */}
+                    <Route
+                        path="/my-containers"
+                        element={
+                            <ProtectedRoute>
+                                <MyContainersPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Active campaign public page — any authenticated user */}
+                    <Route
+                        path="/campaigns"
+                        element={
+                            <AuthRoute>
+                                <CampaignPage />
                             </AuthRoute>
                         }
                     />
