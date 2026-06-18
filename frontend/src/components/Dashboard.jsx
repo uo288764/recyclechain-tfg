@@ -2,18 +2,25 @@
 //
 // Main user dashboard. Combines on-chain data (token balance via ethers.js)
 // with off-chain data (stats, history, tiers) from the Spring Boot backend.
-// Includes QR scanner modal for recording recycling events (FR-05).
-// QR scan button is hidden for ROLE_ADMIN users.
+//
+// Sprint 8: QR scan button now opens ContainerQRScanner (Step 1 of dual QR flow).
+// A compact active campaign banner is shown with a link to the full campaign page.
+// QR scan button and campaign banner are hidden for ROLE_ADMIN users.
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { Link } from "react-router-dom";
 import { useWalletContext } from "../hooks/WalletContext";
 import { useAuthContext } from "../hooks/AuthContext";
 import { getContract } from "../utils/contract";
 import { recyclingService } from "../services/recyclingService";
-import { Scale, Coins, Wallet, Calendar, Trophy, Zap, QrCode } from "lucide-react";
+import apiClient from "../services/apiClient";
+import {
+    Scale, Coins, Wallet, Calendar, Trophy, Zap,
+    QrCode, Package, ChevronRight
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
-import QRScanner from "./QRScanner";
+import ContainerQRScanner from "./ContainerQRScanner";
 
 const Dashboard = () => {
     const { account, provider, isCorrectNetwork } = useWalletContext();
@@ -29,13 +36,14 @@ const Dashboard = () => {
         lastTime: null,
     });
 
-    const [backendStats, setBackendStats] = useState(null);
-    const [history, setHistory] = useState([]);
-    const [loadingChain, setLoadingChain] = useState(false);
-    const [loadingBackend, setLoadingBackend] = useState(false);
-    const [error, setError] = useState(null);
-    const [showScanner, setShowScanner] = useState(false);
-    const [successMessage, setSuccessMessage] = useState(null);
+    const [backendStats, setBackendStats]         = useState(null);
+    const [history, setHistory]                   = useState([]);
+    const [activeCampaign, setActiveCampaign]     = useState(null);
+    const [loadingChain, setLoadingChain]         = useState(false);
+    const [loadingBackend, setLoadingBackend]     = useState(false);
+    const [error, setError]                       = useState(null);
+    const [showScanner, setShowScanner]           = useState(false);
+    const [successMessage, setSuccessMessage]     = useState(null);
 
     const fetchChainStats = async () => {
         if (!account || !provider || !isCorrectNetwork) { return; }
@@ -76,40 +84,56 @@ const Dashboard = () => {
         }
     };
 
+    const fetchActiveCampaign = async () => {
+        try {
+            const response = await apiClient.get("/campaigns/active");
+            setActiveCampaign(response.data);
+        } catch (err) {
+            // 404 means no active campaign — not an error, just hide the banner
+            setActiveCampaign(null);
+        }
+    };
+
     const handleRefresh = () => {
         fetchChainStats();
         fetchBackendData();
+        fetchActiveCampaign();
     };
 
     /**
-     * Called by QRScanner on a successful recycling event submission.
-     * Refreshes all data and shows a temporary success message.
+     * Called by ContainerQRScanner on successful container registration.
+     * Shows a success message and redirects the user to MyContainersPage.
      */
-    const handleScanSuccess = (eventResponse) => {
+    const handleContainerScanned = (container) => {
         setShowScanner(false);
         setSuccessMessage(
-            t("dashboard.scanSuccess", { tokens: eventResponse.tokensEarned })
+            `✓ ${container.brand} (${container.materialType}) registered. Go to My Containers to deposit it.`
         );
-        handleRefresh();
-        setTimeout(() => setSuccessMessage(null), 5000);
+        setTimeout(() => setSuccessMessage(null), 6000);
     };
 
     useEffect(() => {
         fetchBackendData();
+        fetchActiveCampaign();
     }, []);
 
-    // provider is included so the effect re-runs when it becomes available,
-    // preventing a race condition where account is set before provider is ready.
     useEffect(() => {
         fetchChainStats();
     }, [account, provider, isCorrectNetwork]);
 
     const loading = loadingChain || loadingBackend;
 
+    const daysRemaining = activeCampaign
+        ? Math.max(0, Math.ceil(
+            (new Date(activeCampaign.endDate) - new Date()) / (1000 * 60 * 60 * 24)
+          ))
+        : null;
+
     return (
         <div className="max-w-4xl mx-auto px-6 py-10">
 
-            <div className="flex items-start justify-between mb-8">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-green-400 mb-1">
                         {t("dashboard.welcomeBack")}, {user?.name}
@@ -119,17 +143,55 @@ const Dashboard = () => {
                     )}
                 </div>
 
-                {/* QR scan button — only shown to ROLE_USER, never to ROLE_ADMIN */}
+                {/* Action buttons — only for ROLE_USER */}
                 {!isAdmin && (
-                    <button
-                        onClick={() => setShowScanner(true)}
-                        className="flex items-center gap-2 bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-                    >
-                        <QrCode size={18} />
-                        {t("dashboard.scanQR")}
-                    </button>
+                    <div className="flex gap-2">
+                        <Link
+                            to="/my-containers"
+                            className="flex items-center gap-2 border border-gray-700 hover:border-green-600 text-gray-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                        >
+                            <Package size={16} />
+                            {t("dashboard.myContainers")}
+                        </Link>
+                        <button
+                            onClick={() => setShowScanner(true)}
+                            className="flex items-center gap-2 bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                        >
+                            <QrCode size={16} />
+                            {t("dashboard.scanContainer")}
+                        </button>
+                    </div>
                 )}
             </div>
+
+            {/* Active campaign banner */}
+            {!isAdmin && activeCampaign && (
+                <Link
+                    to="/campaigns"
+                    className="flex items-center justify-between bg-green-900/20 border border-green-800 rounded-xl px-5 py-4 mb-6 hover:border-green-600 transition-colors group"
+                >
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-0.5">
+                            {t("dashboard.activeCampaign")}
+                        </p>
+                        <p className="text-white font-semibold">{activeCampaign.name}</p>
+                        <p className="text-green-400 text-sm">
+                            {daysRemaining} {daysRemaining === 1
+                                ? t("campaign.daysRemaining", { count: daysRemaining })
+                                : t("campaign.daysRemaining_other", { count: daysRemaining })}
+                            {activeCampaign.prizePoolEth && (
+                                <span className="text-yellow-400 ml-2">
+                                    · {activeCampaign.prizePoolEth} MATIC prize pool
+                                </span>
+                            )}
+                        </p>
+                    </div>
+                    <ChevronRight
+                        size={20}
+                        className="text-gray-600 group-hover:text-green-400 transition-colors"
+                    />
+                </Link>
+            )}
 
             {loading && (
                 <p className="text-gray-400 text-sm mb-4">{t("dashboard.loadingData")}</p>
@@ -209,7 +271,7 @@ const Dashboard = () => {
                                         <td className="px-4 py-3">{event.stationName}</td>
                                         <td className="px-4 py-3 capitalize">{event.materialType}</td>
                                         <td className="px-4 py-3">{event.weight} kg</td>
-                                        <td className="px-4 py-3 text-yellow-400">{event.tokensEarned} RCT</td>
+                                        <td className="px-4 py-3 text-yellow-400">{event.tokensEarned} RCYC</td>
                                         <td className="px-4 py-3 text-gray-500">
                                             {new Date(event.createdAt).toLocaleDateString()}
                                         </td>
@@ -234,10 +296,9 @@ const Dashboard = () => {
                 ↻ {t("dashboard.refresh")}
             </button>
 
-            {/* QR Scanner — only reachable by ROLE_USER (button is hidden for admin) */}
             {showScanner && !isAdmin && (
-                <QRScanner
-                    onSuccess={handleScanSuccess}
+                <ContainerQRScanner
+                    onSuccess={handleContainerScanned}
                     onClose={() => setShowScanner(false)}
                 />
             )}
