@@ -59,7 +59,11 @@
     "refresh": "Actualizar",
     "never": "Nunca",
     "scanQR": "Escanear QR",
-    "scanSuccess": "¡Reciclaje registrado! Has ganado {{tokens}} tokens RCYC."
+    "scanSuccess": "¡Reciclaje registrado! Has ganado {{tokens}} tokens RCYC.",
+    "scanContainer": "Escanear Envase",
+    "myContainers": "Mis Envases",
+    "activeCampaign": "Campaña Activa",
+    "viewCampaign": "Ver Detalles"
   },
   "stations": {
     "title": "Estaciones de Reciclaje",
@@ -97,6 +101,46 @@
       "totalStations": "Total de Estaciones",
       "activeStations": "Estaciones Activas",
       "errorLoad": "Error al cargar las estadísticas"
+    },
+    "campaigns": {
+      "title": "Gestión de Campañas",
+      "new": "Nueva Campaña",
+      "edit": "Editar",
+      "activate": "Activar",
+      "close": "Cerrar Campaña",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "name": "Nombre",
+      "description": "Descripción",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "prizePool": "Premio del Sorteo (MATIC)",
+      "status": "Estado",
+      "multipliers": "Multiplicadores de Material",
+      "milestones": "Hitos",
+      "draft": "Borrador",
+      "active": "Activa",
+      "closed": "Cerrada",
+      "errorLoad": "Error al cargar las campañas",
+      "errorCreate": "Error al crear la campaña",
+      "errorActivate": "Error al activar la campaña",
+      "errorClose": "Error al cerrar la campaña",
+      "confirmActivate": "Activar la campaña hace todos los parámetros inmutables. ¿Continuar?",
+      "confirmClose": "¿Cerrar esta campaña y lanzar el sorteo?"
+    },
+    "batches": {
+      "title": "Lotes de Envases",
+      "new": "Nuevo Lote",
+      "create": "Crear Lote",
+      "cancel": "Cancelar",
+      "brand": "Marca",
+      "material": "Tipo de Material",
+      "weight": "Peso Unitario (kg)",
+      "units": "Número de Unidades",
+      "campaign": "Campaña",
+      "viewUuids": "Descargar Códigos QR",
+      "errorLoad": "Error al cargar los lotes",
+      "errorCreate": "Error al crear el lote"
     }
   },
   "qrScanner": {
@@ -113,6 +157,60 @@
     "submit": "Registrar reciclaje",
     "submitting": "Registrando...",
     "instructions": "Apunta la cámara al código QR que aparece en la estación de reciclaje.",
+    "material": {
+      "plastic": "Plástico",
+      "metal": "Metal",
+      "glass": "Vidrio",
+      "paper": "Papel",
+      "organic": "Orgánico"
+    }
+  },
+  "containerScanner": {
+    "title": "Escanear QR del Envase",
+    "instructions": "Apunta la cámara al código QR impreso en el envase.",
+    "registering": "Registrando envase...",
+    "notFound": "Envase no encontrado. Asegúrate de escanear un código QR válido de RecycleChain.",
+    "alreadyScanned": "Este envase ya ha sido escaneado.",
+    "cameraError": "No se pudo acceder a la cámara. Comprueba los permisos.",
+    "error": "Ocurrió un error. Inténtalo de nuevo."
+  },
+  "stationScanner": {
+    "title": "Escanear QR de la Estación",
+    "instructions": "Apunta la cámara al código QR de la estación de reciclaje para confirmar el depósito.",
+    "submitting": "Confirmando depósito...",
+    "invalidPayload": "Código QR inválido. Escanea el código QR de la estación.",
+    "noCampaign": "No hay campaña activa. El reciclaje no está disponible en este momento.",
+    "invalidQR": "Código QR inválido o caducado. Inténtalo de nuevo.",
+    "cameraError": "No se pudo acceder a la cámara. Comprueba los permisos.",
+    "error": "Ocurrió un error. Inténtalo de nuevo."
+  },
+  "myContainers": {
+    "title": "Mis Envases Pendientes",
+    "empty": "No hay envases pendientes. Escanea el QR de un envase para empezar.",
+    "depositButton": "Depositar en Estación",
+    "brand": "Marca",
+    "material": "Material",
+    "weight": "Peso Unitario",
+    "scannedAt": "Escaneado",
+    "campaign": "Campaña",
+    "depositSuccess": "¡Envase depositado! Has ganado {{tokens}} tokens RCYC.",
+    "errorLoad": "Error al cargar los envases."
+  },
+  "campaign": {
+    "title": "Campaña Activa",
+    "noCampaign": "No hay ninguna campaña activa en este momento.",
+    "daysRemaining": "{{count}} día restante",
+    "daysRemaining_other": "{{count}} días restantes",
+    "ends": "Finaliza",
+    "prizePool": "Premio del Sorteo",
+    "multipliers": "Multiplicadores de Material",
+    "milestones": "Bonificaciones por Hitos",
+    "verifyOnChain": "Verificar en Polygonscan",
+    "parameterHash": "Hash de Parámetros",
+    "events": "Eventos",
+    "weight": "Peso (kg)",
+    "bonus": "Bonus",
+    "specialBadge": "Especial este mes",
     "material": {
       "plastic": "Plástico",
       "metal": "Metal",

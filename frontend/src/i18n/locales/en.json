@@ -59,7 +59,11 @@
     "refresh": "Refresh",
     "never": "Never",
     "scanQR": "Scan QR",
-    "scanSuccess": "Recycling recorded! You earned {{tokens}} RCYC tokens."
+    "scanSuccess": "Recycling recorded! You earned {{tokens}} RCYC tokens.",
+    "scanContainer": "Scan Container",
+    "myContainers": "My Containers",
+    "activeCampaign": "Active Campaign",
+    "viewCampaign": "View Details"
   },
   "stations": {
     "title": "Recycling Stations",
@@ -97,6 +101,46 @@
       "totalStations": "Total Stations",
       "activeStations": "Active Stations",
       "errorLoad": "Error loading statistics"
+    },
+    "campaigns": {
+      "title": "Campaign Management",
+      "new": "New Campaign",
+      "edit": "Edit",
+      "activate": "Activate",
+      "close": "Close Campaign",
+      "cancel": "Cancel",
+      "save": "Save",
+      "name": "Name",
+      "description": "Description",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "prizePool": "Prize Pool (MATIC)",
+      "status": "Status",
+      "multipliers": "Material Multipliers",
+      "milestones": "Milestones",
+      "draft": "Draft",
+      "active": "Active",
+      "closed": "Closed",
+      "errorLoad": "Error loading campaigns",
+      "errorCreate": "Error creating campaign",
+      "errorActivate": "Error activating campaign",
+      "errorClose": "Error closing campaign",
+      "confirmActivate": "Activating a campaign makes all parameters immutable. Continue?",
+      "confirmClose": "Close this campaign and trigger the lottery draw?"
+    },
+    "batches": {
+      "title": "Container Batches",
+      "new": "New Batch",
+      "create": "Create Batch",
+      "cancel": "Cancel",
+      "brand": "Brand",
+      "material": "Material Type",
+      "weight": "Unit Weight (kg)",
+      "units": "Number of Units",
+      "campaign": "Campaign",
+      "viewUuids": "Download QR Codes",
+      "errorLoad": "Error loading batches",
+      "errorCreate": "Error creating batch"
     }
   },
   "qrScanner": {
@@ -113,6 +157,60 @@
     "submit": "Record Recycling",
     "submitting": "Recording...",
     "instructions": "Point your camera at the QR code displayed at the recycling station.",
+    "material": {
+      "plastic": "Plastic",
+      "metal": "Metal",
+      "glass": "Glass",
+      "paper": "Paper",
+      "organic": "Organic"
+    }
+  },
+  "containerScanner": {
+    "title": "Scan Container QR",
+    "instructions": "Point your camera at the QR code printed on the container packaging.",
+    "registering": "Registering container...",
+    "notFound": "Container not found. Make sure you are scanning a valid RecycleChain QR code.",
+    "alreadyScanned": "This container has already been scanned.",
+    "cameraError": "Could not access camera. Please check permissions.",
+    "error": "An error occurred. Please try again."
+  },
+  "stationScanner": {
+    "title": "Scan Station QR",
+    "instructions": "Point your camera at the QR code displayed at the recycling station to confirm deposit.",
+    "submitting": "Confirming deposit...",
+    "invalidPayload": "Invalid QR code. Please scan the station QR code.",
+    "noCampaign": "No active campaign. Recycling is not available at this time.",
+    "invalidQR": "Invalid or expired QR code. Please try again.",
+    "cameraError": "Could not access camera. Please check permissions.",
+    "error": "An error occurred. Please try again."
+  },
+  "myContainers": {
+    "title": "My Pending Containers",
+    "empty": "No pending containers. Scan a container QR code to get started.",
+    "depositButton": "Deposit at Station",
+    "brand": "Brand",
+    "material": "Material",
+    "weight": "Unit Weight",
+    "scannedAt": "Scanned",
+    "campaign": "Campaign",
+    "depositSuccess": "Container deposited! You earned {{tokens}} RCYC tokens.",
+    "errorLoad": "Error loading containers."
+  },
+  "campaign": {
+    "title": "Active Campaign",
+    "noCampaign": "No active campaign at the moment.",
+    "daysRemaining": "{{count}} day remaining",
+    "daysRemaining_other": "{{count}} days remaining",
+    "ends": "Ends",
+    "prizePool": "Prize Pool",
+    "multipliers": "Material Multipliers",
+    "milestones": "Milestone Bonuses",
+    "verifyOnChain": "Verify on Polygonscan",
+    "parameterHash": "Parameter Hash",
+    "events": "Events",
+    "weight": "Weight (kg)",
+    "bonus": "Bonus",
+    "specialBadge": "Special this month",
     "material": {
       "plastic": "Plastic",
       "metal": "Metal",
